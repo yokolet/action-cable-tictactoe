@@ -32,10 +32,14 @@ group :development, :test do
 
   # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
   gem "rubocop-rails-omakase", require: false
+
+  gem "webmock", "~> 3.24"
+  gem "pry", "~> 0.14.2"
+  gem "rspec-rails", "~> 7.0"
+  gem "faker", "~> 3.4"
 end
 
 group :development do
   # Use console on exceptions pages [https://github.com/rails/web-console]
   gem "web-console"
 end
-
