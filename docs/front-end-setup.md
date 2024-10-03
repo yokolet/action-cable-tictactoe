@@ -167,3 +167,66 @@
     ```html
     <%= vite_typescript_tag 'application' %>
     ```
+
+10. Create a simple Vue App
+    Create `app/frontend/App.vue` with the content below:
+    ```vue
+    <script setup lang="ts">
+    </script>
+
+    <template>
+      <div>Hello from Vue</div>
+    </template>
+
+    <style scoped>
+    </style>
+    ```
+    Update `app/frontend/entrypoints/application.ts` to create a Vue app.
+    ```typescript
+    import { createApp } from 'vue';
+    import App from '../App.vue';
+
+    createApp(App)
+      .mount('#app');
+    ```
+
+    Start the server by `bin/dev` command and see http://localhost:3000
+    The message in `App.vue`, "Hello from Vue", should show up.
+
+11. Install Tailwind CSS
+    ```bash
+    $ bunx tailwindcss init -p
+    ```
+    Above command creates `postcss.config.js` and `tailwind.config.js`.
+    Update `tailwind.config.js` to look at files with tailwind css.
+
+    Create a file, `app/frontend/entrypoints/style.css`, with the content below:
+    ```css
+    @tailwind base;
+    @tailwind components;
+    @tailwind utilities;
+    ```
+    Import `style.css` in `app/frontend/entrypoints/application.ts`:
+    ```typescript
+    import './style.css';
+    ```
+
+11. Install Font Awesome\
+    Update `app/frontend/entrypoints/application.ts` to install Font Awesome.
+    The file should look like below:
+    ```typescript
+    import './style.css';
+    import { createApp } from 'vue';
+    import App from '../App.vue';
+
+    import { library } from '@fortawesome/fontawesome-svg-core'
+    import { fas } from '@fortawesome/free-solid-svg-icons'
+    import { far } from '@fortawesome/free-regular-svg-icons'
+    import { fab } from '@fortawesome/free-brands-svg-icons'
+    import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+    library.add(fas, far, fab)
+
+    createApp(App)
+      .component('font-awesome-icon', FontAwesomeIcon)
+      .mount('#app');
+    ```
