@@ -144,8 +144,26 @@
     Change the bin/dev permission to an executable one, for example, `chmod 755 bin/dev`.
     The backend and frontend servers start by `bin/dev` command.
 
+
 8. Create a Vue app mount point\
     Create a controller and view to mount Vue app.
     ```bash
-    $ rails g controller home index
+    $ bundle exec rails g controller home index
+    ```
+    Edit `app/views/home/index.html.erb` as in below:
+    ```html
+    <%= content_tag(:div, "", id:"app") %>
+    ```
+    Update the route to show Vue app at a root path.
+    ```ruby
+    Rails.application.routes.draw do
+      root "home#index"
+      #...
+    end
+    ```
+
+9. Switch to use TypeScript\
+    The Vue app is going to use TypeScript. Change `app/views/layouts/application.html.erb` as in below:
+    ```html
+    <%= vite_typescript_tag 'application' %>
     ```
