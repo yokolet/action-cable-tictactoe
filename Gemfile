@@ -45,3 +45,5 @@ group :development do
 end
 
 gem "vite_rails", "~> 3.0"
+
+gem "foreman", "~> 0.88.1", :groups => [:development, :test]

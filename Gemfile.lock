@@ -99,6 +99,7 @@ GEM
     erubi (1.13.0)
     faker (3.4.2)
       i18n (>= 1.8.11, < 2)
+    foreman (0.88.1)
     globalid (1.2.1)
       activesupport (>= 6.1)
     hashdiff (1.1.1)
@@ -298,6 +299,7 @@ DEPENDENCIES
   brakeman
   debug
   faker (~> 3.4)
+  foreman (~> 0.88.1)
   jbuilder
   pry (~> 0.14.2)
   puma (>= 5.0)
