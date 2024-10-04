@@ -7,10 +7,11 @@ import PlayerListMedium from './PlayerListMedium.vue';
 import BoardListMedium from './BoardListMedium.vue';
 
 import { ref } from 'vue';
+import { usePlayerStore } from '../stores/player.ts';
+import { storeToRefs } from 'pinia';
 
-const players = ref<string[]>([
-  'Bob', 'Christopher', "D'Arcy", 'Ellen', 'Francisca', 'Guadalupe', 'Hayden',
-]);
+const playerStore = usePlayerStore();
+const { players } = storeToRefs(playerStore);
 
 const bgColors = ref<string[]>([
   'bg-red-600', 'bg-orange-600', 'bg-amber-600', 'bg-yellow-600', 'bg-lime-600', 'bg-green-600',

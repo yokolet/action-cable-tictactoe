@@ -1,7 +1,8 @@
 class PlayerChannel < ApplicationCable::Channel
   def subscribed
     stream_from "player_channel"
-    transmit({ players: current_player_names })
+    #transmit({ players: current_player_names })
+    transmit({ players: static_player_names })    # for ui testing purpose
   end
 
   def unsubscribed
@@ -11,7 +12,7 @@ class PlayerChannel < ApplicationCable::Channel
   end
 
   def register(data)
-    result = add_player(current_player_id, data[:name])
+    result = add_player(current_player_id, data[:player])
     if result[:status] == "success"
       ActionCable.server.broadcast("player_channel", { players: current_player_names })
     else
@@ -39,6 +40,12 @@ class PlayerChannel < ApplicationCable::Channel
       map { |player_id| Rails.cache.read(player_id) }.
       filter {|player| player }.
       map { |player| player.name }
+  end
+
+  def static_player_names
+    [
+      'Bob', 'Christopher', "D'Arcy", 'Ellen', 'Francisca', 'Guadalupe', 'Hayden',
+    ]
   end
 
   def existing_player?(player_key)
