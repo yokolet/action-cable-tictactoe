@@ -37,6 +37,7 @@ const openFullList = ref<boolean>(false);
       </button>
       <FullList
           :open-full-list="openFullList"
+          :clickable="false"
           :close-full-list="false"
           :items="players"
           :tx-colors="txColors"
