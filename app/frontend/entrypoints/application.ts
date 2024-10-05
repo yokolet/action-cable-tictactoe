@@ -30,7 +30,7 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import './style.css'
 import App from '../App.vue'
-//import router from '../router'
+import router from '../router'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fas } from '@fortawesome/free-solid-svg-icons'
 import { far } from '@fortawesome/free-regular-svg-icons'
@@ -41,22 +41,6 @@ library.add(fas, far, fab)
 export const firstLetter = (name: string) => name.charAt(0).toUpperCase();
 
 const app = createApp(App);
-
-// To avoid the error:Uncaught ReferenceError: Cannot access 'router' before initialization
-// the router definition is written here.
-import { createRouter, createWebHistory } from 'vue-router'
-//import HomeView from '../views/HomeView.vue'
-
-const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
-  routes: [
-    {
-      path: '/',
-      name: 'home',
-      component: () => import('../views/HomeView.vue')
-    },
-  ]
-})
 
 app
   .component('font-awesome-icon', FontAwesomeIcon)

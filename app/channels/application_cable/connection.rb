@@ -7,8 +7,7 @@ module ApplicationCable
     end
 
     def disconnect
-      # Any cleanup work needed when the cable connection is cut.
-      delete_player(current_player_id)
+      # Any cleanup work needed when the cable connection is cut.)
       cookies.delete(:tictactoe_player_id)
     end
 

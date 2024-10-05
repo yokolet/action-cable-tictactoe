@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { usePlayerStore } from '../stores/player.ts';
+import { storeToRefs } from 'pinia';
 
 defineProps<{
   openRegistration: boolean,
@@ -7,10 +8,11 @@ defineProps<{
 
 const emit = defineEmits(['closeRegistration']);
 
-const playerName = ref<string>('');
-const message = ref<string>('');
+const playerStore = usePlayerStore();
+const { message, playerName } = storeToRefs(playerStore);
 const register = () => {
   console.log('playerName', playerName.value);
+  playerStore.addPlayer();
 }
 </script>
 
@@ -21,7 +23,7 @@ const register = () => {
   >
     <div class="flex flex-col items-center justify-center w-full space-y-6 font-bold text-white rounded-sm">
       <button
-          class="absolute right-2 md:right-6 top-1 md:top-4 text-lightBlue p-2 hover:text-white hover:scale-110 text-2xl md:text-3xl"
+          class="absolute right-2 md:right-32 top-1 md:top-4 text-lightBlue p-2 hover:text-white hover:scale-110 text-2xl md:text-3xl"
           @click="emit('closeRegistration')"
       >
         <span class=""><font-awesome-icon :icon="['far', 'circle-xmark']" /></span>
