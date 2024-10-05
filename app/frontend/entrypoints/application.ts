@@ -40,7 +40,9 @@ library.add(fas, far, fab)
 
 export const firstLetter = (name: string) => name.charAt(0).toUpperCase();
 
-createApp(App)
+const app = createApp(App);
+
+app
   .component('font-awesome-icon', FontAwesomeIcon)
   .use(createPinia())
   .use(router)

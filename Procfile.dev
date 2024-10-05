@@ -1,2 +1,2 @@
 web: bin/rails s
-js: bun run dev
+vite: bun run dev
