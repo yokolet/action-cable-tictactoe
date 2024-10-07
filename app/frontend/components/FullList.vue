@@ -1,12 +1,18 @@
 <script setup lang="ts">
 defineProps<{
-  items: string[],
+  items: string[] | string[][],
   txColors: string[],
   openFullList: boolean,
   clickable: boolean,
 }>();
 
 const emit = defineEmits(['closeFullList']);
+
+const joinBoard = (item: string | string[]) => {
+  if (typeof item === 'object') {
+    console.log(`joined to board: ${item[1]}, id: ${item[0]}`);
+  }
+}
 </script>
 
 <template>
@@ -26,10 +32,11 @@ const emit = defineEmits(['closeFullList']);
           class="group"
       >
         <button
+            @click="joinBoard(item)"
             class="w-full text-center"
             :class="txColors[index]"
         >
-          {{ item }}
+          {{ typeof item === "string" ? item : item[1] }}
         </button>
         <div
             v-show="clickable"

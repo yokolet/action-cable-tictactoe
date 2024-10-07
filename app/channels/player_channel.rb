@@ -3,13 +3,13 @@ class PlayerChannel < ApplicationCable::Channel
     player_name = params[:player]
     stream_from "player_channel"
     result = {
-      action: "subscribed",
-      status: existing_player?(player_key(player_name)) ? "existing" : "non-existing",
+      action: "player:action:subscribed",
+      status: existing_player?(player_key(player_name)) ? "player:status:existing" : "player:status:non-existing",
       players: current_player_names,
       #players: static_player_names, # for ui testing purpose
     }
   rescue => error
-    result[:status] = "error"
+    result[:status] = "player:status:error"
     result[:message] = error.message
   ensure
     transmit(result)
@@ -24,7 +24,7 @@ class PlayerChannel < ApplicationCable::Channel
     puts("player_id: #{current_player_id}, player: #{data["player"]}")
     result = add_player(current_player_id, data["player"])
   rescue => error
-    result[:status] = "error"
+    result[:status] = "player:status:error"
     result[:message] = error.message
   ensure
     transmit(result)
@@ -33,12 +33,12 @@ class PlayerChannel < ApplicationCable::Channel
   def unregister(_)
     delete_player(current_player_id)
     result = {
-      action: "unregister",
-      status: "success",
+      action: "player:action:unregister",
+      status: "player:status:success",
       players: current_player_names,
     }
   rescue => error
-    result[:status] = "error"
+    result[:status] = "player:status:error"
     result[:message] = error.message
   ensure
     transmit(result)
@@ -47,7 +47,7 @@ class PlayerChannel < ApplicationCable::Channel
   def heads_up(data)
     result = {
       action: data['action'],
-      status: 'success',
+      status: 'player:status:success',
       players: current_player_names,
       message: data['message']
     }
@@ -83,22 +83,22 @@ class PlayerChannel < ApplicationCable::Channel
   end
 
   def add_player(player_id, player_name)
-    result = { action: "register" }
+    result = { action: "player:action:register" }
     key = player_key(player_name)
     puts("player_id: #{player_id}, player_name: #{player_name}, key: #{key}")
     if (existing_player?(key))
-      result[:status] = "retry"
+      result[:status] = "player:status:retry"
       result[:message] = "Player name #{player_name} exists. Choose another."
     else
       players = current_players
       players[key] = player_id
       Rails.cache.write(player_id, Player.new(player_name), expires_in: 1.hour)
       Rails.cache.write(:players, players)
-      result[:status] = "success"
+      result[:status] = "player:status:success"
       result[:message] = "#{player_name} has been registered successfully."
     end
   rescue => error
-    result[:status] = "error"
+    result[:status] = "player:status:error"
     result[:message] = error.message
   ensure
     return result

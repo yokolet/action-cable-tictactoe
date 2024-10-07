@@ -21,11 +21,11 @@ export const usePlayerStore = defineStore('player', () => {
     .create({ channel: 'PlayerChannel', player: playerName.value }, {
     received(data: IData) {
       console.log('Received data', data);
-      if (data['action'] === 'subscribed') {
+      if (data['action'] === 'player:action:subscribed') {
         afterSubscribed(data);
-      } else if (data['action'] === 'register') {
+      } else if (data['action'] === 'player:action:register') {
         afterAddPlayer(data);
-      } else if (data['action'] === 'unregister') {
+      } else if (data['action'] === 'player:action:unregister') {
         afterRemovePlayer(data);
       } else {
         players.value = data["players"] ? data["players"] : [];
@@ -34,10 +34,10 @@ export const usePlayerStore = defineStore('player', () => {
   });
 
   const afterSubscribed = (data: IData) => {
-    if (data['status'] === 'error' || data['status'] === 'non-existing') {
+    if (data['status'] === 'player:status:error' || data['status'] === 'player:status:non-existing') {
       registered.value = false;
       playerName.value = '';
-    } else if (data['status'] === 'existing') {
+    } else if (data['status'] === 'player:status:existing') {
       registered.value = true;
     }
     players.value = data["players"] ? data["players"] : [];
@@ -52,12 +52,12 @@ export const usePlayerStore = defineStore('player', () => {
   }
 
   const afterAddPlayer = (data: IData) => {
-    if (data['status'] === 'error' || data['status'] === 'retry') {
+    if (data['status'] === 'player:status:error' || data['status'] === 'player:status:retry') {
       message.value = data['message'] ? data['message'] : 'Something went wrong';
-    } else if (data['status'] === 'success') {
+    } else if (data['status'] === 'player:status:success') {
       registered.value = true;
       message.value = '';
-      channel.perform("heads_up", {"action": "howdy", "message": `${playerName.value} has joined.` });
+      channel.perform("heads_up", {"action": "player:action:howdy", "message": `${playerName.value} has joined.` });
     }
   }
 
@@ -66,10 +66,10 @@ export const usePlayerStore = defineStore('player', () => {
   }
 
   const afterRemovePlayer = (data: IData) => {
-    if (data['status'] === 'error') {
+    if (data['status'] === 'player:status:error') {
       message.value = data['message'] || 'Something went wrong';
-    } else if (data['status'] === 'success') {
-      channel.perform("heads_up", {"action": "goodbye", "message": `${playerName.value} has left.` });
+    } else if (data['status'] === 'player:status:success') {
+      channel.perform("heads_up", {"action": "player:action:goodbye", "message": `${playerName.value} has left.` });
       registered.value = false;
       playerName.value = '';
       message.value = '';
