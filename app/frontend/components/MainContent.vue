@@ -23,10 +23,6 @@ const txColors = ref<string[]>([
   'text-emerald-600', 'text-teal-600', 'text-cyan-600',
 ]);
 
-const boards = ref<string[]>([
-    'Mario Kart 8', 'Pokémon Omega Ruby', 'Batman: Arkham Asylum', 'BioShock'
-]);
-
 const boardBgColors = ref<string[]>([
   'bg-cyan-600', 'bg-sky-600', 'bg-blue-600', 'bg-indigo-600', 'bg-violet-600', 'bg-purple-600',
 ]);
@@ -34,6 +30,8 @@ const boardBgColors = ref<string[]>([
 const boardTxColors = ref<string[]>([
   'text-cyan-600', 'text-sky-600', 'text-blue-600', 'text-indigo-600', 'text-violet-600', 'text-purple-600',
 ]);
+
+
 </script>
 
 <template>
@@ -54,7 +52,6 @@ const boardTxColors = ref<string[]>([
       </div>
       <div class="md:hidden">
         <BoardListSmall
-            :boards="boards"
             :boardBgColors="boardBgColors"
             :boardTxColors="boardTxColors"
         />
@@ -64,7 +61,6 @@ const boardTxColors = ref<string[]>([
       </div>
       <div class="hidden md:flex md:col-span-3">
         <BoardListMedium
-            :boards="boards"
             :boardBgColors="boardBgColors"
             :boardTxColors="boardTxColors"
         />
