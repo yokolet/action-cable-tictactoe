@@ -6,8 +6,8 @@ import { ref } from 'vue';
 interface IData {
   action: string;
   status: string;
-  players?: string[];
   message?: string;
+  players?: string[];
 }
 
 export const usePlayerStore = defineStore('player', () => {
@@ -15,6 +15,7 @@ export const usePlayerStore = defineStore('player', () => {
   const playerName = useStorage('registered-player-name', '', sessionStorage);
   const players = ref<string[]>([]);
   const message = ref<string>('');
+  const currentBoardId = ref<string>('');
 
   const channel = createConsumer()
     .subscriptions
@@ -76,5 +77,5 @@ export const usePlayerStore = defineStore('player', () => {
     }
   }
 
-  return { registered, message, players, playerName, addPlayer, removePlayer }
+  return { registered, message, players, playerName, currentBoardId, addPlayer, removePlayer }
 });

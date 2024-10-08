@@ -1,14 +1,17 @@
-import { defineStore } from 'pinia';
+import { defineStore, storeToRefs } from 'pinia';
 import { createConsumer } from '@rails/actioncable';
 import { ref } from 'vue';
 import { v4 as uuidv4 } from 'uuid';
+import { useBoardStore } from './board.ts';
 
 interface IData {
   action: string;
   status: string;
-  boards?: string[][];
   message?: string;
+  boards?: string[][];
 }
+
+const boardStore = useBoardStore();
 
 export const useBoardListStore = defineStore('board-list', () => {
   const boards = ref<string[][]>([]);
@@ -20,7 +23,7 @@ export const useBoardListStore = defineStore('board-list', () => {
     .subscriptions
     .create({ channel: 'BoardListChannel' }, {
     received(data: IData) {
-      console.log('Received data', data);
+      console.log('BoardListStore received data', data);
       if (data['action'] === 'board-list:action:subscribed') {
         afterSubscribed(data);
       } else if (data['action'] === 'board-list:action:create') {
@@ -35,7 +38,7 @@ export const useBoardListStore = defineStore('board-list', () => {
 
   const afterSubscribed = (data: IData) => {
     if (data['status'] === 'board-list:status:error') {
-      message.value = data['message'] || '';
+      message.value = data['message'] || 'Something went wrong';
     } else if (data['status'] === 'board-list:status:success') {
       boards.value = data["boards"] || [];
     }
@@ -59,6 +62,7 @@ export const useBoardListStore = defineStore('board-list', () => {
       boardName.value = '';
       message.value = '';
       openBoardForm.value = false;
+      boardStore.joinBoard(data['bid']);
     }
   }
 

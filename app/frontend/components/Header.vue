@@ -37,12 +37,16 @@ watch(
     </div>
     <div class="flex items-center justify-end space-x-4 md:text-lg md:space-x-10 md:absolute top-12 right-10">
       <div
-          v-show="registered"
+          v-if="registered"
           class="hover:text-lightBlue"
       >
         <span class="text-base"><font-awesome-icon :icon="['fas', 'user']" /></span>
         {{ playerName }}
       </div>
+      <div
+          v-else
+          class="hover:text-lightBlue"
+      >Register to Play</div>
       <button
           @click="toggleRegistration"
           class="p-2 rounded-full w-32 bg-slate-600 hover:text-lightBlue hover:scale-95"

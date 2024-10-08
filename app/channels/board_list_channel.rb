@@ -91,6 +91,7 @@ class BoardListChannel < ApplicationCable::Channel
       Rails.cache.write(creator_id, creator)
       result[:status] = "board-list:status:success"
       result[:message] = "#{board_name} has been created successfully."
+      result[:bid] = board_id
     end
   rescue => error
     result[:status] = "board-list:status:error"

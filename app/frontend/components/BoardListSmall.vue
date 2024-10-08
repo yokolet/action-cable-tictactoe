@@ -4,7 +4,8 @@ import { usePlayerStore } from '../stores/player.ts';
 import { storeToRefs } from 'pinia';
 import FullList from './FullList.vue';
 import { ref } from 'vue';
-import { useBoardListStore } from '../stores/boadlist.ts';
+import { useBoardListStore } from '../stores/boardlist.ts';
+import { useBoardStore } from '../stores/board.ts';
 import BoardForm from '../components/BoardForm.vue';
 
 defineProps<{
@@ -16,11 +17,13 @@ const playerStore = usePlayerStore();
 const { registered } = storeToRefs(playerStore);
 const boardListStore = useBoardListStore();
 const { boards, openBoardForm } = storeToRefs(boardListStore);
+const boardStore = useBoardStore();
 
 const openFullList = ref<boolean>(false);
 
 const joinBoard = (boardId: string) => {
   console.log(`joined to board: ${boardId}`);
+  boardStore.joinBoard(boardId);
 }
 </script>
 
