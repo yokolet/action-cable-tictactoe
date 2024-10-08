@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useBoardStore } from '../stores/board.ts';
+
 defineProps<{
   items: string[] | string[][],
   txColors: string[],
@@ -8,9 +10,12 @@ defineProps<{
 
 const emit = defineEmits(['closeFullList']);
 
+const boardStore = useBoardStore();
+
 const joinBoard = (item: string | string[]) => {
   if (typeof item === 'object') {
     console.log(`joined to board: ${item[1]}, id: ${item[0]}`);
+    boardStore.joinBoard(item[0]);
   }
 }
 </script>

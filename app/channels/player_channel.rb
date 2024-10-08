@@ -18,6 +18,12 @@ class PlayerChannel < ApplicationCable::Channel
   def unsubscribed
     # Any cleanup needed when channel is unsubscribed
     delete_player(current_player_id)
+    result = {
+      action: 'player:action:unsubscribed',
+      status: 'success',
+      players: current_player_names,
+    }
+    ActionCable.server.broadcast("player_channel", result)
   end
 
   def register(data)

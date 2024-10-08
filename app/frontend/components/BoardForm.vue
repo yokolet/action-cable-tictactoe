@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { useBoardListStore } from '../stores/boadlist.ts';
+import { useBoardListStore } from '../stores/boardlist.ts';
 
 const boardListStore = useBoardListStore();
 const { message, boardName, openBoardForm } = storeToRefs(boardListStore);
