@@ -5,15 +5,10 @@ RSpec.describe "TicTacToeBoard", type: :util do
     let!(:board) { TicTacToeBoard.new }
     let(:player_ids) { 5.times.map {|_| SecureRandom.uuid } }
 
-    it "returns status of :waiting" do
-      result = board.state
-      expect(result[:status]).to eq(:waiting)
-      expect(result[:board]).to eq([
-                                     ['', '', ''],
-                                     ['', '', ''],
-                                     ['', '', ''],
-                                   ])
+    it "has initial states" do
+      expect(board.state).to eq(:waiting)
       expect(board.player_ids.length).to eq(0)
+      expect(board.count).to eq(0)
     end
 
     it "allows to join and returns a player status" do
@@ -179,17 +174,12 @@ RSpec.describe "TicTacToeBoard", type: :util do
                                    ])
     end
 
-    it "returns the game status :finished after x or o wins" do
+    it "has the game state :finished after x or o wins" do
       [[0, 0], [1, 0], [0, 1], [1, 1], [0, 2]].each_with_index do |pos, idx|
         @board.update(pos[0], pos[1], player_ids[idx % 2])
       end
       result = @board.update(1, 2, player_ids[@board.count % 2])
-      expect(result[:status]).to eq(:finished)
-      expect(result[:board]).to eq([
-                                     ['x', 'x', 'x'],
-                                     ['o', 'o', ''],
-                                     ['', '', ''],
-                                   ])
+      expect(@board.state).to eq(:finished)
     end
 
     it "returns the game status :draw" do
