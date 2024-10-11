@@ -1,11 +1,12 @@
 # frozen_string_literal: true
 
 class TicTacToeBoard
-  attr_reader :count, :state, :player_ids
+  attr_reader :name, :count, :state, :player_ids
 
-  def initialize
+  def initialize(name)
+    @name = name
     @count = 0
-    @state = :waiting
+    @state = :waiting  # :waiting, :ongoing, :finished
     @board = [
       ['', '', ''],
       ['', '', ''],
@@ -15,29 +16,43 @@ class TicTacToeBoard
   end
 
   def join(player_id)
+    return {
+      type: @player_ids[player_id],
+      state: @state,
+      board: @board
+    } if @player_ids.has_key?(player_id)
+
     case @player_ids.length
     when 0
       @player_ids[player_id] = :playing_x
+      @state = :waiting
     when 1
       @player_ids[player_id] = :playing_o
       @state = :ongoing
     else
       @player_ids[player_id] = :viewing
     end
-    return @player_ids[player_id]
+    return {
+      type: @player_ids[player_id],
+      state: @state,
+      board: @board
+    }
   end
 
   def update(x, y, id)
+    # play_result: :go_next, :x_wins, :o_wins, :draw, :invalid, :not_allowed
     if @player_ids[id] == :viewing
       return {
-        status: :not_allowed,
+        play_result: :not_allowed,
+        count: @count,
         board: @board
       }
     elsif (@player_ids[id] == :playing_x && @count % 2 == 1) ||
       (@player_ids[id] == :playing_o && @count % 2 == 0) ||
       @board[x][y] != ''
       return {
-        status: :invalid,
+        play_result: :invalid,
+        count: @count,
         board: @board
       }
     end
@@ -47,18 +62,21 @@ class TicTacToeBoard
     if winner?
       @state = :finished
       return {
-        status: @count % 2 == 1 ? :x_wins : :o_wins,
+        play_result: @count % 2 == 1 ? :x_wins : :o_wins,
+        count: @count,
         board: @board
       }
     elsif @count == 9
       @state = :finished
       return {
-        status: :draw,
+        play_result: :draw,
+        count: @count,
         board: @board
       }
     else
       return {
-        status: :ongoing,
+        play_result: :go_next,
+        count: @count,
         board: @board
       }
     end

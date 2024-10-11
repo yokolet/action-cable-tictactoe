@@ -7,11 +7,16 @@ class BoardChannel < ApplicationCable::Channel
       board = find(board_id)
       if board
         stream_from "board_channel_#{board_id}"
+        board_status = board.join(current_player_id)
         result[:status] = 'board:status:success'
+        result[:message] = "Successfully subscribed to #{board.name}"
         result[:name] = board.name
         result[:bid] = board_id
-        result[:message] = "Successfully subscribed to #{board.name}"
-        result[:board] = []
+        result[:player_type] = board_status[:type]
+        result[:player_name] = player_name(current_player_id)
+        result[:board_state] = board_status[:state]
+        result[:board_data] = board_status[:board]
+        replace(board_id, board);
       else
         result[:status] = 'board:status:retry'
         result[:message] = 'The board might be deleted. Choose another or create.'
@@ -33,11 +38,11 @@ class BoardChannel < ApplicationCable::Channel
   end
 
   def leave_board(data)
-    puts("leave_board: player_id: #{current_player_id}, board: #{data["boardId"]}")
+    puts("leave_board: player_id: #{current_player_id}, board: #{data["bid"]}")
     result = { action: 'board:action:leave' }
-    board = find(data["boardId"])
+    board = find(data['bid'])
     if board
-      stop_stream_from "board_channel_#{data["boardId"]}"
+      stop_stream_from "board_channel_#{data['bid']}"
       result[:status] = 'board:status:success'
       result[:message] = "Successfully left the board: #{board.name}"
     end
@@ -48,13 +53,55 @@ class BoardChannel < ApplicationCable::Channel
     transmit(result)
   end
 
-  def play(data)
+  def heads_up(data)
+    board = find(data['bid'])
+    result = {
+      action: 'board:action:heads_up',
+      status: 'board:status:success',
+      message: data['message'],
+      bid: data['bid'],
+      player_type: board.player_ids[current_player_id],
+      player_name: player_name(current_player_id)
+    }
+    puts("BoardChannel: heads up: input data = #{data.inspect}")
+    puts("BoardChannel: heads up: result = #{result.inspect}")
+    puts("BoardChannel: heads up: board = #{board.inspect}, player: #{current_player_id}")
+    ActionCable.server.broadcast("board_channel_#{data["bid"]}", result)
+  rescue => error
+    result[:status] = 'board:status:error'
+    result[:message] = error.message
+    transmit(result)
+  end
 
+  def play(data)
+    result = { action: 'board:action:play' }
+    board = find(data['bid'])
+    board_status = board.update(data['x'], data['y'], current_player_id)
+    replace(data['bid'], board)
+    if [:go_next, :x_wins, :o_wins, :draw].include?(board_status[:play_result])
+      result[:status] = 'board:status:success'
+      result[:play_result] = board_status[:play_result]
+      result[:board_count] = board_status[:count]
+      result[:board_data] = board_status[:board]
+      ActionCable.server.broadcast("board_channel_#{data['bid']}", result)
+    end
+  rescue => error
+    result[:status] = 'board:status:error'
+    result[:message] = error.message
+    transmit(result)
   end
 
   private
 
   def find(board_id)
     Rails.cache.read(board_id)
+  end
+
+  def replace(board_id, board)
+    Rails.cache.write(board_id, board)
+  end
+
+  def player_name(player_id)
+    Rails.cache.read(player_id).name
   end
 end

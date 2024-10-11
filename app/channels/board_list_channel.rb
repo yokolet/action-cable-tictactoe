@@ -20,8 +20,8 @@ class BoardListChannel < ApplicationCable::Channel
   end
 
   def create_board(data)
-    puts("creator_id: #{current_player_id}, board: #{data["board"][0]}, #{data["board"][1]}")
-    result = add_board(current_player_id, data["board"][0], data["board"][1])
+    puts("creator_id: #{current_player_id}, board_id: #{data["board_id"]}, board_name: #{data["board_name"]}")
+    result = add_board(data["board_id"], data["board_name"])
   rescue => error
     result[:status] = "board-list:status:error"
     result[:message] = error.message
@@ -60,7 +60,10 @@ class BoardListChannel < ApplicationCable::Channel
   end
 
   def current_boards
-    Rails.cache.fetch(:boards) { {} }
+    boards = Rails.cache.fetch(:boards) { {} }
+    boards = boards.filter {|_, bid| Rails.cache.read(bid)}    # remove expired board
+    Rails.cache.write(:boards, boards)
+    boards
   end
 
   def current_board_list
@@ -74,7 +77,7 @@ class BoardListChannel < ApplicationCable::Channel
     current_boards.include?(board_key)
   end
 
-  def add_board(creator_id, board_id, board_name)
+  def add_board(board_id, board_name)
     result = { action: "board-list:action:create" }
     key = board_key(board_name)
     puts("board_id: #{board_id}, board_name: #{board_name}, key: #{key}")
@@ -84,11 +87,8 @@ class BoardListChannel < ApplicationCable::Channel
     else
       boards = current_boards
       boards[key] = board_id
-      Rails.cache.write(board_id, Board.new(board_name), expires_in: 1.hour)
+      Rails.cache.write(board_id, TicTacToeBoard.new(board_name), expires_in: 1.hour)
       Rails.cache.write(:boards, boards)
-      creator = Rails.cache.read(creator_id)
-      creator.creator_of(board_id)
-      Rails.cache.write(creator_id, creator)
       result[:status] = "board-list:status:success"
       result[:message] = "#{board_name} has been created successfully."
       result[:bid] = board_id

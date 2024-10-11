@@ -1,19 +1,39 @@
 <script setup lang="ts">
-import { useTicTacToeStore } from '../stores/tictactoe';
 import { storeToRefs } from 'pinia';
 import { usePlayerStore } from '../stores/player.ts';
 import { useBoardStore } from '../stores/board.ts';
 import { computed, ref, watch } from 'vue';
 
-const store = useTicTacToeStore();
-const { player, board, winner, isTie, isOver } = storeToRefs(store);
 const playerStore = usePlayerStore();
 const { registered, currentBoardId } = storeToRefs(playerStore);
 
 const boardStore = useBoardStore();
-const { boardChannel } = storeToRefs(boardStore);
+const { x_name, o_name, boardChannel } = storeToRefs(boardStore);
 
 const boardName = ref<string>('Join or Create Board');
+
+const players = computed(() => {
+  let who = ' VS ';
+  if (x_name.value) {
+    who = `X: ${x_name.value} ${who}`;
+  }
+  if (o_name.value) {
+    who = `${who} O: ${o_name.value}`;
+  }
+  return who;
+});
+
+const winner = computed(() => {
+  if (boardChannel.value['playResult'] === 'x_wins') {
+    return `${x_name.value} won`;
+  } else if (boardChannel.value['playResult'] === 'o-wins') {
+    return `${o_name.value} won`;
+  } else if (boardChannel.value['playResult'] === 'draw') {
+    return 'Cat Got It!';
+  } else {
+    return '';
+  }
+});
 
 watch(
     currentBoardId,
@@ -42,45 +62,47 @@ watch(
         class="mt-4 text-2xl"
     >{{ boardName }}</div>
     <div v-show="currentBoardId">
-      <div v-if="!isOver" class="mb-2 text-spline text-[18px] text-gray-50 pt-4 px-4 rounded-md">
-        <div v-if="player === 'X'">
-          <font-awesome-icon :icon="['fas', 'xmark']" />'s turn
-        </div>
-        <div v-else-if="player === 'O'">
-          <font-awesome-icon :icon="['fas', 'o']" />'s turn
+      <div class="flex items-center justify-center text-xl"><span v-html="players"></span></div>
+      <div
+          v-if="boardChannel['boardState'] === 'ongoing'"
+          class="mb-2 text-spline text-[18px] text-gray-50 pt-4 px-4 rounded-md"
+      >
+        <div>
+          <div v-if="boardChannel['boardCount'] % 2 === 0">
+            <font-awesome-icon :icon="['fas', 'xmark']" />'s turn
+          </div>
+          <div v-else>
+            <font-awesome-icon :icon="['fas', 'o']" />'s turn
+          </div>
         </div>
       </div>
-      <div v-else>
-        <h3 v-if="winner" class="mt-4 text-2xl lg:text-4xl font-bold text-gray-50">
-          <div v-if="winner === 'X'">
-            Player <font-awesome-icon :icon="['fas', 'xmark']" /> wins!
-          </div>
-          <div v-else-if="winner === 'O'">
-            Player <font-awesome-icon :icon="['fas', 'o']" /> wins!
-          </div>
+      <div
+          v-else
+      >
+        <h3 class="mt-4 text-2xl lg:text-4xl font-bold text-gray-50">
+          {{ winner }}
         </h3>
-        <h3 v-if="isTie" class="mt-4 text-2xl lg:text-4xl font-bold text-gray-50">Cat Got It!</h3>
       </div>
     </div>
     <div class="mx-12 md:mx-6 lg:mx-48 mb-4 p-8">
-      <div v-for="(row, x) in board" :key="x" class="flex">
+      <div v-for="(row, x) in boardChannel['boardData']" :key="x" class="flex">
         <button
             v-for="(cell, y) in row"
             :key="y"
-            @click="store.updateBoard(x, y)"
+            @click="boardStore.play(currentBoardId, x, y)"
             class="flex items-center justify-center w-24 h-24 text-[52px] bg-slate-700
           border-4 border-slate-800 rounded-xl font-raleway cursor-pointer hover:scale-105
           disabled:opacity-35 disabled:cursor-not-allowed"
             :class="{
-        'text-mediumGreen': cell === 'X',
-        'text-deepOrange': cell === 'O',
+        'text-mediumGreen': cell === 'x',
+        'text-deepOrange': cell === 'o',
       }"
             :disabled="!registered || !currentBoardId"
         >
-          <div v-if="cell === 'X'">
+          <div v-if="cell === 'x'">
             <font-awesome-icon :icon="['fas', 'xmark']" />
           </div>
-          <div v-else-if="cell === 'O'">
+          <div v-else-if="cell === 'o'">
             <font-awesome-icon :icon="['fas', 'o']" />
           </div>
         </button>
