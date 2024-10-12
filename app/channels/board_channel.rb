@@ -8,15 +8,16 @@ class BoardChannel < ApplicationCable::Channel
       if board
         stream_from "board_channel_#{board_id}"
         board_status = board.join(current_player_id)
+        replace(board_id, board)
         result[:status] = 'board:status:success'
         result[:message] = "Successfully subscribed to #{board.name}"
         result[:name] = board.name
         result[:bid] = board_id
-        result[:player_type] = board_status[:type]
-        result[:player_name] = player_name(current_player_id)
+        result[:player_x] = player_x(board)
+        result[:player_o] = player_o(board)
         result[:board_state] = board_status[:state]
+        result[:board_count] = board.count
         result[:board_data] = board_status[:board]
-        replace(board_id, board);
       else
         result[:status] = 'board:status:retry'
         result[:message] = 'The board might be deleted. Choose another or create.'
@@ -61,7 +62,8 @@ class BoardChannel < ApplicationCable::Channel
       message: data['message'],
       bid: data['bid'],
       player_type: board.player_ids[current_player_id],
-      player_name: player_name(current_player_id)
+      player_name: player_name(current_player_id),
+      board_state: board.state
     }
     puts("BoardChannel: heads up: input data = #{data.inspect}")
     puts("BoardChannel: heads up: result = #{result.inspect}")
@@ -80,6 +82,7 @@ class BoardChannel < ApplicationCable::Channel
     replace(data['bid'], board)
     if [:go_next, :x_wins, :o_wins, :draw].include?(board_status[:play_result])
       result[:status] = 'board:status:success'
+      result[:bid] = data['bid']
       result[:play_result] = board_status[:play_result]
       result[:board_count] = board_status[:count]
       result[:board_data] = board_status[:board]
@@ -103,5 +106,15 @@ class BoardChannel < ApplicationCable::Channel
 
   def player_name(player_id)
     Rails.cache.read(player_id).name
+  end
+
+  def player_x(board)
+    pid = board.player_ids.filter {|_, v| v == :playing_x}.keys[0]
+    pid ? player_name(pid) : ''
+  end
+
+  def player_o(board)
+    pid = board.player_ids.filter {|_, v| v == :playing_o}.keys[0]
+    pid ? player_name(pid) : ''
   end
 end

@@ -8,27 +8,37 @@ const playerStore = usePlayerStore();
 const { registered, currentBoardId } = storeToRefs(playerStore);
 
 const boardStore = useBoardStore();
-const { x_name, o_name, boardChannel } = storeToRefs(boardStore);
+const {
+  boardChannel,
+  boardName,
+  boardState,
+  boardCount,
+  boardData,
+  playResult,
+  xName,
+  oName
+} = storeToRefs(boardStore);
 
-const boardName = ref<string>('Join or Create Board');
+const displayName = ref<string>('Join or Create Board');
 
 const players = computed(() => {
-  let who = ' VS ';
-  if (x_name.value) {
-    who = `X: ${x_name.value} ${who}`;
+  let who = ' vs ';
+  if (xName.value) {
+    who = `X: ${xName.value} ${who}`;
   }
-  if (o_name.value) {
-    who = `${who} O: ${o_name.value}`;
+  if (oName.value) {
+    who = `${who} O: ${oName.value}`;
   }
+  who = `<span>${who}</span>`;
   return who;
 });
 
 const winner = computed(() => {
-  if (boardChannel.value['playResult'] === 'x_wins') {
-    return `${x_name.value} won`;
-  } else if (boardChannel.value['playResult'] === 'o-wins') {
-    return `${o_name.value} won`;
-  } else if (boardChannel.value['playResult'] === 'draw') {
+  if (playResult.value === 'x_wins') {
+    return `${xName.value} won`;
+  } else if (playResult.value === 'o_wins') {
+    return `${oName.value} won`;
+  } else if (playResult.value === 'draw') {
     return 'Cat Got It!';
   } else {
     return '';
@@ -44,15 +54,20 @@ watch(
         console.log('GamePanel currentBoardId', currentBoardId.value);
         console.log('GamePanel, boardChannel', boardChannel.value);
         if (currentBoardId.value && boardChannel.value) {
-          boardName.value = `${boardChannel.value['name']} Battle!`;
+          displayName.value = `${boardName.value} Battle!`;
         } else {
-          boardName.value = 'Join or Create Board';
+          displayName.value = 'Join or Create Board';
         }
       } else {
-        boardName.value = 'Join or Create Board';
+        displayName.value = 'Join or Create Board';
       }
     }
 )
+
+watch(boardCount, (newValue, oldValue) => {
+  console.log('GamePanel, boardCount, newValue', newValue);
+  console.log('GamePanel, boardCount, oldValue', oldValue);
+});
 </script>
 
 <template>
@@ -60,15 +75,15 @@ watch(
     <div
         v-if="registered"
         class="mt-4 text-2xl"
-    >{{ boardName }}</div>
+    >{{ displayName }}</div>
     <div v-show="currentBoardId">
-      <div class="flex items-center justify-center text-xl"><span v-html="players"></span></div>
+      <div class="flex items-center justify-center text-xl" v-html="players"></div>
       <div
-          v-if="boardChannel['boardState'] === 'ongoing'"
+          v-if="boardState === 'ongoing'"
           class="mb-2 text-spline text-[18px] text-gray-50 pt-4 px-4 rounded-md"
       >
         <div>
-          <div v-if="boardChannel['boardCount'] % 2 === 0">
+          <div v-if="boardCount % 2 === 0">
             <font-awesome-icon :icon="['fas', 'xmark']" />'s turn
           </div>
           <div v-else>
@@ -85,7 +100,7 @@ watch(
       </div>
     </div>
     <div class="mx-12 md:mx-6 lg:mx-48 mb-4 p-8">
-      <div v-for="(row, x) in boardChannel['boardData']" :key="x" class="flex">
+      <div v-for="(row, x) in boardData" :key="x" class="flex">
         <button
             v-for="(cell, y) in row"
             :key="y"
