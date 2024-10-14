@@ -9,11 +9,11 @@ interface IData {
   message?: string;
   bid: string;
   name: string;
-  player_x: string;
-  player_o: string;
+  x_name: string;
+  o_name: string;
   player_type: string;
   player_name: string;
-  play_result: string;    // go_next, x_wins, o_wins, draw
+  play_result: string;    // go_next, x_wins, o_wins, or draw
   board_state: string;    // waiting, ongoing, or finished
   board_count: number;
   board_data: string[][];
@@ -24,8 +24,10 @@ const { currentBoardId } = storeToRefs(playerStore);
 
 export const useBoardStore = defineStore('board', () => {
   const boardChannel = ref<any>(null);
-  const boardId = ref<string>('');
   const boardName = ref<string>('');
+  const xName = ref<string>('');
+  const oName = ref<string>('');
+  const playResult = ref<string>('');
   const boardState = ref<string>('');
   const boardCount = ref<number>(0);
   const boardData = ref<string[][]>([
@@ -33,9 +35,6 @@ export const useBoardStore = defineStore('board', () => {
     ['', '', ''],
     ['', '', ''],
   ]);
-  const playResult = ref<string>('');
-  const xName = ref<string>('');
-  const oName = ref<string>('');
   const viewers = ref<string[]>([]);
   const message = ref<string>('');
 
@@ -60,12 +59,14 @@ export const useBoardStore = defineStore('board', () => {
     if (data['status'] === 'board:status:success' && bid === data['bid']) {
       message.value = '';
       boardName.value = data['name'];
-      boardId.value = data['bid'];
+      xName.value = data['x_name'];
+      oName.value = data['o_name'];
+      playResult.value = data['play_result'];
       boardState.value = data['board_state'];
+      boardCount.value = data['board_count'];
       boardData.value = data['board_data']; // a game might be ongoing already
       currentBoardId.value = data['bid'];
-      xName.value = data['player_x'];
-      oName.value = data['player_o'];
+
       console.log('afterSubscribed', boardChannel.value, boardName.value);
       boardChannel.value.perform(
         'heads_up',
@@ -83,6 +84,7 @@ export const useBoardStore = defineStore('board', () => {
     if (data['status'] === 'board:status:success' && boardId === data['bid']) {
       message.value = '';
       playResult.value = data['play_result'];
+      boardState.value = data['board_state'];
       boardCount.value = data['board_count'];
       boardData.value = data['board_data'];
     } else {
@@ -117,6 +119,6 @@ export const useBoardStore = defineStore('board', () => {
     boardChannel.value.perform("play", {bid: bid, x: x, y: y});
   }
 
-  return { boardChannel, boardName, boardId, boardState, boardCount, boardData,
-    playResult, xName, oName, viewers, message, joinBoard, play };
+  return { boardChannel, boardName, xName, oName, playResult, boardState, boardCount, boardData,
+    viewers, message, joinBoard, play };
 });

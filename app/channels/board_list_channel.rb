@@ -35,12 +35,12 @@ class BoardListChannel < ApplicationCable::Channel
 
   def heads_up(data)
     result = {
-      action: data['action'],
+      action: 'board-list:action:heads_up',
       status: 'board-list:status:success',
       boards: current_board_list,
       message: data['message']
     }
-    puts("heads up: result = #{result.inspect}")
+    puts("board-list:action:heads_up: result = #{result.inspect}")
     ActionCable.server.broadcast("board_list_channel", result)
   end
 
@@ -70,7 +70,7 @@ class BoardListChannel < ApplicationCable::Channel
     current_boards.values.
       map { |board_id| [board_id, Rails.cache.read(board_id)] }.
       filter {|board_pair| board_pair.last }.
-      map { |board_pair| [board_pair[0], board_pair[1].name] }
+      map { |board_pair| [board_pair[0], board_pair[1].snapshot[:name]] }
   end
 
   def existing_board?(board_key)

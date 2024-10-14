@@ -11,12 +11,12 @@ const boardStore = useBoardStore();
 const {
   boardChannel,
   boardName,
+  xName,
+  oName,
+  playResult,
   boardState,
   boardCount,
   boardData,
-  playResult,
-  xName,
-  oName
 } = storeToRefs(boardStore);
 
 const displayName = ref<string>('Join or Create Board');
@@ -92,12 +92,13 @@ watch(boardCount, (newValue, oldValue) => {
         </div>
       </div>
       <div
-          v-else
+          v-else-if="boardState === 'finished'"
       >
         <h3 class="mt-4 text-2xl lg:text-4xl font-bold text-gray-50">
           {{ winner }}
         </h3>
       </div>
+      <div v-else>Waiting...</div>
     </div>
     <div class="mx-12 md:mx-6 lg:mx-48 mb-4 p-8">
       <div v-for="(row, x) in boardData" :key="x" class="flex">

@@ -1,12 +1,13 @@
 # frozen_string_literal: true
 
 class TicTacToeBoard
-  attr_reader :name, :count, :state, :player_ids
+  #attr_reader :name, :count, :state, :play_result, :board
 
   def initialize(name)
     @name = name
     @count = 0
     @state = :waiting  # :waiting, :ongoing, :finished
+    @play_result = :go_next  # :go_next, :x_wins, :o_wins, :draw
     @board = [
       ['', '', ''],
       ['', '', ''],
@@ -15,11 +16,25 @@ class TicTacToeBoard
     @player_ids = {}
   end
 
+  def snapshot
+    return {
+      name: @name,
+      count: @count,
+      state: @state,
+      play_result: @play_result,
+      board: @board,
+      player_ids: @player_ids
+    }
+  end
+
+  def player_type(player_id)
+    return @player_ids[player_id]
+  end
+
   def join(player_id)
     return {
-      type: @player_ids[player_id],
-      state: @state,
-      board: @board
+      type: player_type(player_id),
+      state: @state
     } if @player_ids.has_key?(player_id)
 
     case @player_ids.length
@@ -33,25 +48,29 @@ class TicTacToeBoard
       @player_ids[player_id] = :viewing
     end
     return {
-      type: @player_ids[player_id],
-      state: @state,
-      board: @board
+      type: player_type(player_id),
+      state: @state
     }
   end
 
+  def player_x
+    @player_ids.filter {|_, v| v == :playing_x}.keys[0]
+  end
+
+  def player_o
+    @player_ids.filter {|_, v| v == :playing_o}.keys[0]
+  end
+
   def update(x, y, id)
-    # play_result: :go_next, :x_wins, :o_wins, :draw, :invalid, :not_allowed
-    if @player_ids[id] == :viewing
-      return {
-        play_result: :not_allowed,
-        count: @count,
-        board: @board
-      }
-    elsif (@player_ids[id] == :playing_x && @count % 2 == 1) ||
+    # play_result: :go_next, :x_wins, :o_wins, :draw
+    if @player_ids[id] == :viewing ||
+      (@player_ids[id] == :playing_x && @count % 2 == 1) ||
       (@player_ids[id] == :playing_o && @count % 2 == 0) ||
-      @board[x][y] != ''
+      @board[x][y] != '' ||
+      @state != :ongoing
       return {
-        play_result: :invalid,
+        play_result: @play_result,
+        state: @state,
         count: @count,
         board: @board
       }
@@ -61,25 +80,17 @@ class TicTacToeBoard
 
     if winner?
       @state = :finished
-      return {
-        play_result: @count % 2 == 1 ? :x_wins : :o_wins,
-        count: @count,
-        board: @board
-      }
+      @play_result = @count % 2 == 1 ? :x_wins : :o_wins
     elsif @count == 9
       @state = :finished
-      return {
-        play_result: :draw,
-        count: @count,
-        board: @board
-      }
-    else
-      return {
-        play_result: :go_next,
-        count: @count,
-        board: @board
-      }
+      @play_result = :draw
     end
+    return {
+      play_result: @play_result,
+      state: @state,
+      count: @count,
+      board: @board
+    }
   end
 
   private
