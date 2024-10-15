@@ -1,4 +1,4 @@
-import { defineStore, storeToRefs } from 'pinia';
+import { defineStore } from 'pinia';
 import { createConsumer } from '@rails/actioncable';
 import { ref } from 'vue';
 import { v4 as uuidv4 } from 'uuid';
@@ -8,6 +8,7 @@ interface IData {
   action: string;
   status: string;
   message?: string;
+  bid: string;
   boards?: string[][];
 }
 
@@ -22,19 +23,19 @@ export const useBoardListStore = defineStore('board-list', () => {
   const channel = createConsumer()
     .subscriptions
     .create({ channel: 'BoardListChannel' }, {
-    received(data: IData) {
-      console.log('BoardListStore received data', data);
-      if (data['action'] === 'board-list:action:subscribed') {
-        afterSubscribed(data);
-      } else if (data['action'] === 'board-list:action:create') {
-        afterCreateBoard(data);
-      } else if (data['action'] === 'board-list:action:delete') {
-        afterDeleteBoard(data);
-      } else {
-        boards.value = data["boards"] || [];
+      received(data: IData) {
+        console.log('BoardListStore received data', data);
+        if (data['action'] === 'board-list:action:subscribed') {
+          afterSubscribed(data);
+        } else if (data['action'] === 'board-list:action:create') {
+          afterCreateBoard(data);
+        } else if (data['action'] === 'board-list:action:delete') {
+          afterDeleteBoard(data);
+        } else {
+          boards.value = data["boards"] || [];
+        }
       }
-    }
-  });
+    });
 
   const afterSubscribed = (data: IData) => {
     if (data['status'] === 'board-list:status:error') {
@@ -49,16 +50,14 @@ export const useBoardListStore = defineStore('board-list', () => {
       message.value = 'Board name is required';
       return;
     }
-    channel.perform("create_board", {"board": [uuidv4(), boardName.value] });
+    channel.perform("create_board", {"board_id": uuidv4(), "board_name": boardName.value});
   }
 
   const afterCreateBoard = (data: IData) => {
     if (data['status'] === 'board-list:status:error' || data['status'] === 'board-list:status:retry') {
       message.value = data['message'] ? data['message'] : 'Something went wrong';
     } else if (data['status'] === 'board-list:status:success') {
-      channel.perform(
-        "heads_up",
-        { "action": "board-list:action:howdy", "message": `${boardName.value} has been created.` });
+      channel.perform("heads_up", { "act": "board-list:action:howdy", "message": `${boardName.value} has been created.` });
       boardName.value = '';
       message.value = '';
       openBoardForm.value = false;
@@ -74,7 +73,7 @@ export const useBoardListStore = defineStore('board-list', () => {
     if (data['status'] === 'board-list:status:error') {
       message.value = data['message'] || 'Something went wrong';
     } else if (data['status'] === 'board-list:status:success') {
-      channel.perform("heads_up", {"action": "board-list:action:goodbye", "message": `${boardName.value} was deleted.` });
+      channel.perform("heads_up", {"act": "board-list:action:goodbye", "message": `${boardName.value} was deleted.` });
       boardName.value = '';
       message.value = '';
     }

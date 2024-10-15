@@ -58,7 +58,7 @@ export const usePlayerStore = defineStore('player', () => {
     } else if (data['status'] === 'player:status:success') {
       registered.value = true;
       message.value = '';
-      channel.perform("heads_up", {"action": "player:action:howdy", "message": `${playerName.value} has joined.` });
+      channel.perform("heads_up", {"act": "player:action:howdy", "message": `${playerName.value} has joined.` });
     }
   }
 
@@ -70,7 +70,7 @@ export const usePlayerStore = defineStore('player', () => {
     if (data['status'] === 'player:status:error') {
       message.value = data['message'] || 'Something went wrong';
     } else if (data['status'] === 'player:status:success') {
-      channel.perform("heads_up", {"action": "player:action:goodbye", "message": `${playerName.value} has left.` });
+      channel.perform("heads_up", {"act": "player:action:goodbye", "message": `${playerName.value} has left.` });
       registered.value = false;
       playerName.value = '';
       message.value = '';

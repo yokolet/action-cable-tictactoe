@@ -37,12 +37,10 @@ class PlayerChannel < ApplicationCable::Channel
   end
 
   def unregister(_)
+    result = { action: "player:action:unregister" }
     delete_player(current_player_id)
-    result = {
-      action: "player:action:unregister",
-      status: "player:status:success",
-      players: current_player_names,
-    }
+    result[:status] = "player:status:success"
+    result[:players] = current_player_names
   rescue => error
     result[:status] = "player:status:error"
     result[:message] = error.message
@@ -52,7 +50,7 @@ class PlayerChannel < ApplicationCable::Channel
 
   def heads_up(data)
     result = {
-      action: data['action'],
+      action: data['act'],
       status: 'player:status:success',
       players: current_player_names,
       message: data['message']
