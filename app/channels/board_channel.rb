@@ -5,6 +5,7 @@ class BoardChannel < ApplicationCable::Channel
     result = { action: 'board:action:subscribed' }
     if board_id
       board = find(board_id)
+      puts("BoardChannel subscribed, board_id: board  #{board_id}: #{board.inspect}")
       if board
         stream_from "board_channel_#{board_id}"
         board.join(current_player_id)
@@ -82,6 +83,19 @@ class BoardChannel < ApplicationCable::Channel
     transmit(result)
   end
 
+  def leave(_)
+    terminated_boards(current_player_id).each do |bid|
+      result = {
+        action: 'board:action:leave',
+        status: 'board:status:success',
+        bid: bid,
+        board_state: :terminated
+      }
+      ActionCable.server.broadcast("board_channel_#{bid}", result)
+    end
+
+  end
+
   private
 
   def find(board_id)
@@ -93,6 +107,22 @@ class BoardChannel < ApplicationCable::Channel
   end
 
   def player_name(player_id)
-    player_id ? Rails.cache.read(player_id).name : ''
+    player_id && Rails.cache.read(player_id) ? Rails.cache.read(player_id).name : ''
+  end
+
+  def terminated_boards(player_id)
+    board_list = Rails.cache.read(:boards)
+    return [] if !board_list
+    result = []
+    board_list.values.each do |bid|
+      board = Rails.cache.read(bid)
+      next if !board
+      current_board = board.snapshot
+      if current_board[:state] == :ongoing && (board.player_x == player_id || board.player_o == player_id)
+        board.terminate
+        result << bid
+      end
+    end
+    result
   end
 end

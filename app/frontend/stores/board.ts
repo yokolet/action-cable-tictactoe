@@ -71,6 +71,7 @@ export const useBoardStore = defineStore('board', () => {
       boardChannel.value.perform(
         'heads_up',
         {
+          act: 'board:action:howdy',
           message: `A new player joined to ${data['name']}.`,
           bid: bid
         });
@@ -90,8 +91,6 @@ export const useBoardStore = defineStore('board', () => {
     } else {
       message.value = data['message'] || 'Something went wrong';
     }
-    console.log('afterPlay, boardCount', boardCount.value);
-    console.log('afterPlay, boardData', boardData.value);
   }
 
   const afterHowdy = (boardId: string, data: IData) => {
@@ -108,6 +107,8 @@ export const useBoardStore = defineStore('board', () => {
         default:
           viewers.value.push(data['player_name'])
       }
+    } else {
+      message.value = data['message'] || 'Something went wrong';
     }
   }
 
@@ -119,6 +120,10 @@ export const useBoardStore = defineStore('board', () => {
     boardChannel.value.perform("play", {bid: bid, x: x, y: y});
   }
 
+  const leave = () => {
+    boardChannel.value.perform("leave");
+  }
+
   return { boardChannel, boardName, xName, oName, playResult, boardState, boardCount, boardData,
-    viewers, message, joinBoard, play };
+    viewers, message, joinBoard, play, leave };
 });

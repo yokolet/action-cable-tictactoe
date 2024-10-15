@@ -29,19 +29,25 @@ class BoardListChannel < ApplicationCable::Channel
     transmit(result)
   end
 
-  def delete_board(data)
-    delete_board(data['board_id'])
+  def delete_board(_)
+    # Deleting a board from a board list doesn't happen by action.
+    # The board is just expired.
+    # When the current_boards method gets called, the expired board is removed from the list.
   end
 
   def heads_up(data)
     result = {
-      action: 'board-list:action:heads_up',
+      action: data['act'] || 'board-list:action:heads_up',
       status: 'board-list:status:success',
-      boards: current_board_list,
       message: data['message']
     }
+    result[:boards] = current_board_list
     puts("board-list:action:heads_up: result = #{result.inspect}")
     ActionCable.server.broadcast("board_list_channel", result)
+  rescue => error
+    result[:status] = "board-list:status:error"
+    result[:message] = error.message
+    transmit(result)
   end
 
   private
@@ -60,17 +66,15 @@ class BoardListChannel < ApplicationCable::Channel
   end
 
   def current_boards
-    boards = Rails.cache.fetch(:boards) { {} }
-    boards = boards.filter {|_, bid| Rails.cache.read(bid)}    # remove expired board
+    boards = Rails.cache.fetch(:boards) { {} }.filter {|_, bid| Rails.cache.read(bid)} # remove expired boards
     Rails.cache.write(:boards, boards)
     boards
   end
 
   def current_board_list
     current_boards.values.
-      map { |board_id| [board_id, Rails.cache.read(board_id)] }.
-      filter {|board_pair| board_pair.last }.
-      map { |board_pair| [board_pair[0], board_pair[1].snapshot[:name]] }
+      map { |bid| [bid, Rails.cache.read(bid)] }.
+      map { |bid, board| [bid, board.snapshot[:name]] }
   end
 
   def existing_board?(board_key)
@@ -87,10 +91,10 @@ class BoardListChannel < ApplicationCable::Channel
     else
       boards = current_boards
       boards[key] = board_id
-      Rails.cache.write(board_id, TicTacToeBoard.new(board_name), expires_in: 1.hour)
       Rails.cache.write(:boards, boards)
+      Rails.cache.write(board_id, TicTacToeBoard.new(board_name), expires_in: 10.minutes)
       result[:status] = "board-list:status:success"
-      result[:message] = "#{board_name} has been created successfully."
+      result[:message] = "#{board_name} has been created."
       result[:bid] = board_id
     end
   rescue => error
@@ -98,15 +102,5 @@ class BoardListChannel < ApplicationCable::Channel
     result[:message] = error.message
   ensure
     return result
-  end
-
-  def delete_board(board_id)
-    board = Rails.cache.read(board_id)
-    if board
-      boards = current_boards
-      boards.delete(board_key(board.name))
-      Rails.cache.write(:boards, boards)
-      Rails.cache.delete(board_id)
-    end
   end
 end

@@ -68,13 +68,21 @@ watch(boardCount, (newValue, oldValue) => {
   console.log('GamePanel, boardCount, newValue', newValue);
   console.log('GamePanel, boardCount, oldValue', oldValue);
 });
+
+watch(registered, (newValue, oldValue) => {
+  console.log('GamePanel, registered, newValue', newValue);
+  console.log('GamePanel, registered, oldValue', oldValue);
+  // if (!newValue && oldValue) {
+  //   boardStore.leave();
+  // }
+})
 </script>
 
 <template>
   <div class="container mx-auto flex flex-col items-center justify-center w-full h-full px-4 text-center bg-slate-800">
     <div
-        v-if="registered"
         class="mt-4 text-2xl"
+        :class="registered ? '' : 'opacity-35'"
     >{{ displayName }}</div>
     <div v-show="currentBoardId">
       <div class="flex items-center justify-center text-xl" v-html="players"></div>

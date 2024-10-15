@@ -57,9 +57,7 @@ export const useBoardListStore = defineStore('board-list', () => {
     if (data['status'] === 'board-list:status:error' || data['status'] === 'board-list:status:retry') {
       message.value = data['message'] ? data['message'] : 'Something went wrong';
     } else if (data['status'] === 'board-list:status:success') {
-      channel.perform(
-        "heads_up",
-        { "action": "board-list:action:howdy", "message": `${boardName.value} has been created.` });
+      channel.perform("heads_up", { "act": "board-list:action:howdy", "message": `${boardName.value} has been created.` });
       boardName.value = '';
       message.value = '';
       openBoardForm.value = false;
@@ -75,7 +73,7 @@ export const useBoardListStore = defineStore('board-list', () => {
     if (data['status'] === 'board-list:status:error') {
       message.value = data['message'] || 'Something went wrong';
     } else if (data['status'] === 'board-list:status:success') {
-      channel.perform("heads_up", {"action": "board-list:action:goodbye", "message": `${boardName.value} was deleted.` });
+      channel.perform("heads_up", {"act": "board-list:action:goodbye", "message": `${boardName.value} was deleted.` });
       boardName.value = '';
       message.value = '';
     }

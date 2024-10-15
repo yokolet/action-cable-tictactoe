@@ -6,7 +6,7 @@ class TicTacToeBoard
   def initialize(name)
     @name = name
     @count = 0
-    @state = :waiting  # :waiting, :ongoing, :finished
+    @state = :waiting  # :waiting, :ongoing, :finished, or :terminated
     @play_result = :go_next  # :go_next, :x_wins, :o_wins, :draw
     @board = [
       ['', '', ''],
@@ -91,6 +91,10 @@ class TicTacToeBoard
       count: @count,
       board: @board
     }
+  end
+
+  def terminate
+    @state = :terminated
   end
 
   private
