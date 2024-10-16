@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class TicTacToeBoard
-  #attr_reader :name, :count, :state, :play_result, :board
+  attr_reader :name
 
   def initialize(name)
     @name = name
