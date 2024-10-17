@@ -1,6 +1,7 @@
 class BoardListChannel < ApplicationCable::Channel
+  include CacheManager
+
   def subscribed
-    # stream_from "some_channel"
     stream_from "board_list_channel"
     result = {
       action: "board-list:action:subscribed",
@@ -63,22 +64,6 @@ class BoardListChannel < ApplicationCable::Channel
 
   def board_key(board_name)
     board_name.downcase.to_sym
-  end
-
-  def current_boards
-    boards = Rails.cache.fetch(:boards) { {} }.filter {|_, bid| Rails.cache.read(bid)} # remove expired boards
-    Rails.cache.write(:boards, boards)
-    boards
-  end
-
-  def current_board_list
-    current_boards.values.
-      map { |bid| [bid, Rails.cache.read(bid)] }.
-      map { |bid, board| [bid, board.snapshot[:name]] }
-  end
-
-  def existing_board?(board_key)
-    current_boards.include?(board_key)
   end
 
   def add_board(board_id, board_name)
