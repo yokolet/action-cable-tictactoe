@@ -91,4 +91,18 @@ module CacheManager
   def delete_board(bid)
     delete_instance(bid, :boards)
   end
+
+  def clear_instances(key)
+    instances = Rails.cache.fetch(key) { {} }
+    instances.each_pair {|_, bid| Rails.cache.delete(bid)}
+    Rails.cache.delete(key)
+  end
+
+  def clear_players
+    clear_instances(:players)
+  end
+
+  def clear_boards
+    clear_instances(:boards)
+  end
 end

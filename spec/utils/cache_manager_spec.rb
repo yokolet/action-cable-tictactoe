@@ -119,9 +119,10 @@ RSpec.describe "CacheManager", type: :util do
       end
 
       it 'delete a player' do
+        previous = Rails.cache.read(:players)
         cm.delete_player(pid)
         result = Rails.cache.read(:players)
-        expect(result.length).to eq(0)
+        expect(result.length).to eq(previous.length - 1)
         player = Rails.cache.read(pid)
         expect(player).to be_nil
       end
@@ -226,13 +227,58 @@ RSpec.describe "CacheManager", type: :util do
         Rails.cache.delete(:boards)
       end
 
-      it 'delete a player' do
+      it 'delete a board' do
+        previous = Rails.cache.read(:boards)
         cm.delete_board(bid)
         result = Rails.cache.read(:boards)
-        expect(result.length).to eq(0)
+        expect(result.length).to eq(previous.length - 1)
         board = Rails.cache.read(bid)
         expect(board).to be_nil
       end
+    end
+  end
+
+  context 'after 3 players were registered' do
+    let(:player_data) {
+      [
+        {name: Faker::Name.name, id: SecureRandom.uuid},
+        {name: Faker::Name.name, id: SecureRandom.uuid},
+        {name: Faker::Name.name, id: SecureRandom.uuid}
+      ]
+    }
+
+    before(:each) do
+      player_data.each { |d| cm.add_new_player(d[:name], d[:id])  }
+    end
+
+    it 'clears 3 players' do
+      players = cm.current_players
+      expect(players.length).to eq(3)
+      cm.clear_players
+      players = cm.current_players
+      expect(players.length).to eq(0)
+    end
+  end
+
+  context 'after 3 boards were created' do
+    let(:board_data) {
+      [
+        {name: Faker::Game.title, id: SecureRandom.uuid},
+        {name: Faker::Game.title, id: SecureRandom.uuid},
+        {name: Faker::Game.title, id: SecureRandom.uuid}
+      ]
+    }
+
+    before(:each) do
+      board_data.each { |d| cm.add_new_board(d[:name], d[:id])  }
+    end
+
+    it 'clears 3 boards' do
+      boards = cm.current_boards
+      expect(boards.length).to eq(3)
+      cm.clear_boards
+      boards = cm.current_boards
+      expect(boards.length).to eq(0)
     end
   end
 end
