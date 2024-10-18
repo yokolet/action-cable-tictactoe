@@ -21,6 +21,10 @@ module CacheManager
     name.downcase.to_sym
   end
 
+  def find(id)
+    Rails.cache.read(id)
+  end
+
   def current_instances(key)
     instances = Rails.cache.fetch(key) { {} }.
       filter {|_, id| Rails.cache.read(id)}
@@ -36,32 +40,43 @@ module CacheManager
     current_instances(:boards)
   end
 
+  def current_instance_list(key)
+    current_instances(key).values.
+      map { |id| Rails.cache.read(id) }.
+      map { |instance| instance.name }
+  end
+
   def current_player_list
-    current_players.values.
-      map { |pid| Rails.cache.read(pid) }.
-      map { |player| player.name }
+    current_instance_list(:players)
+  end
+
+  def current_instance_pair_list(key)
+    current_instances(key).values.
+      map { |id| [id, Rails.cache.read(id)] }.
+      map { |id, instance| [id, instance.name] }
   end
 
   def current_board_list
-    current_boards.values.
-      map { |bid| [bid, Rails.cache.read(bid)] }.
-      map { |bid, board| [bid, board.name] }
+    current_instance_pair_list(:boards)
+  end
+
+  def existing_instance?(name, key)
+    current_instances(key).include?(to_key(sanitize(name)))
   end
 
   def existing_player?(name)
-    current_players.include?(to_key(sanitize(name)))
+    existing_instance?(name,:players)
   end
 
   def existing_board?(name)
-    current_boards.include?(to_key(sanitize(name)))
+    existing_instance?(name, :boards)
   end
 
-  def add_new(name, id, type, clazz)
+  def add_new(name, id, key, clazz)
     name = sanitize(name)
-    key = to_key(name)
-    instances = current_instances(type)
-    instances[key] = id
-    Rails.cache.write(type, instances)
+    instances = current_instances(key)
+    instances[to_key(name)] = id
+    Rails.cache.write(key, instances)
     Rails.cache.write(id, clazz.new(name))
   end
 
@@ -73,13 +88,12 @@ module CacheManager
     add_new(name, id, :boards, TicTacToeBoard)
   end
 
-  def delete_instance(id, type)
+  def delete_instance(id, key)
     instance = Rails.cache.read(id)
     if instance
-      key = to_key(sanitize(instance.name))
-      instances = current_instances(type)
-      instances.delete(key)
-      Rails.cache.write(type, instances)
+      instances = current_instances(key)
+      instances.delete(to_key(sanitize(instance.name)))
+      Rails.cache.write(key, instances)
       Rails.cache.delete(id)
     end
   end
@@ -94,7 +108,7 @@ module CacheManager
 
   def clear_instances(key)
     instances = Rails.cache.fetch(key) { {} }
-    instances.each_pair {|_, bid| Rails.cache.delete(bid)}
+    instances.each_pair {|_, id| Rails.cache.delete(id)}
     Rails.cache.delete(key)
   end
 
