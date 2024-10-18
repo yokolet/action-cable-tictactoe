@@ -27,7 +27,7 @@ module CacheManager
 
   def current_instances(key)
     instances = Rails.cache.fetch(key) { {} }.
-      filter {|_, id| Rails.cache.read(id)}
+      filter { |_, id| Rails.cache.read(id) && Rails.cache.read(id).keep? }
     Rails.cache.write(key, instances)
     instances
   end
@@ -86,6 +86,10 @@ module CacheManager
 
   def add_new_board(name, id)
     add_new(name, id, :boards, TicTacToeBoard)
+  end
+
+  def replace_instance(id, instance)
+    Rails.cache.write(id, instance)
   end
 
   def delete_instance(id, key)

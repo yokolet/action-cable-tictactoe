@@ -5,9 +5,9 @@ RSpec.describe "TicTacToeBoard", type: :util do
     let!(:board) { TicTacToeBoard.new('My Board') }
     let(:player_ids) { 5.times.map {|_| SecureRandom.uuid } }
 
-    it "has initial states" do
+    it "with initial states" do
       result = board.snapshot
-      expect(result[:name]).to eq('My Board')
+      expect(board.name).to eq('My Board')
       expect(result[:count]).to eq(0)
       expect(result[:state]).to eq(:waiting)
       expect(result[:play_result]).to eq(:go_next)
@@ -16,7 +16,6 @@ RSpec.describe "TicTacToeBoard", type: :util do
                                      ['', '', ''],
                                      ['', '', ''],
                                    ])
-      expect(result[:player_ids].length).to eq(0)
     end
 
     it "allows to join and returns a player status" do
@@ -44,9 +43,9 @@ RSpec.describe "TicTacToeBoard", type: :util do
       player_ids.map { |id| @board.join(id) }
     end
 
-    it "returns initial state with updated player_ids" do
+    it "returns initial state with updated player_types" do
       result = @board.snapshot
-      expect(result[:name]).to eq('My Board')
+      expect(@board.name).to eq('My Board')
       expect(result[:count]).to eq(0)
       expect(result[:state]).to eq(:ongoing)
       expect(result[:play_result]).to eq(:go_next)
@@ -55,7 +54,8 @@ RSpec.describe "TicTacToeBoard", type: :util do
                                      ['', '', ''],
                                      ['', '', ''],
                                    ])
-      expect(result[:player_ids].length).to eq(3)
+      types = player_ids.map {|id| @board.player_type(id) }
+      expect(types).to eq([:playing_x, :playing_o, :viewing])
     end
 
     it "allows the first player to update firstly" do
@@ -286,32 +286,3 @@ RSpec.describe "TicTacToeBoard", type: :util do
     end
   end
 end
-
-
-# board can have only two players
-
-# what about the first two players have a right to put x or o?
-# when one of first two players left, the third will get a right to play?
-
-# players can be add one by one
-# the third and later people will be a viewer
-#     what about leaving the board before the game ends?
-
-# board has three states: waiting, ongoing, finished
-# the result has four types: none, x-wins, o-wins, draw
-
-# board updates the state by x, y coordinate
-# board judges every time the state is updated to find a winner
-
-# after thee board has the status of finished, the board will be deleted within 30 seconds or so
-
-# example by EventMachine
-# require 'eventmachine'
-#
-# class MyTimer
-#   def initialize
-#     @timer = EventMachine.add_timer(10.seconds) { puts "Timer fired!" }
-#   end
-# end
-
-

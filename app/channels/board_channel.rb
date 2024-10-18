@@ -1,4 +1,6 @@
 class BoardChannel < ApplicationCable::Channel
+  include CacheManager
+
   def subscribed
     # stream_from "some_channel"
     board_id = params[:board_id]
@@ -9,14 +11,15 @@ class BoardChannel < ApplicationCable::Channel
       if board
         stream_from "board_channel_#{board_id}"
         board.join(current_player_id)
-        replace(board_id, board)
+        board.update_name(player_name(current_player_id), current_player_id)
+        replace_instance(board_id, board)
         current_board = board.snapshot
         result[:status] = 'board:status:success'
         result[:message] = "Successfully subscribed to #{current_board[:name]}"
-        result[:name] = current_board[:name]
+        result[:name] = board.name
         result[:bid] = board_id
-        result[:x_name] = player_name(board.player_x)
-        result[:o_name] = player_name(board.player_o)
+        result[:x_name] = board.x_name
+        result[:o_name] = board.o_name
         result[:play_result] = current_board[:play_result]
         result[:board_state] = current_board[:state]
         result[:board_count] = current_board[:count]
@@ -45,7 +48,7 @@ class BoardChannel < ApplicationCable::Channel
     board = find(data['bid'])
     current_board = board.snapshot
     result = {
-      action: 'board:action:heads_up',
+      action: data['act'] || 'board:action:heads_up',
       status: 'board:status:success',
       message: data['message'],
       bid: data['bid'],
@@ -67,7 +70,7 @@ class BoardChannel < ApplicationCable::Channel
     result = { action: 'board:action:play' }
     board = find(data['bid'])
     board_status = board.update(data['x'], data['y'], current_player_id)
-    replace(data['bid'], board)
+    replace_instance(data['bid'], board)
     if [:go_next, :x_wins, :o_wins, :draw].include?(board_status[:play_result])
       result[:status] = 'board:status:success'
       result[:bid] = data['bid']
@@ -98,16 +101,8 @@ class BoardChannel < ApplicationCable::Channel
 
   private
 
-  def find(board_id)
-    Rails.cache.read(board_id)
-  end
-
-  def replace(board_id, board)
-    Rails.cache.write(board_id, board)
-  end
-
   def player_name(player_id)
-    player_id && Rails.cache.read(player_id) ? Rails.cache.read(player_id).name : ''
+    player_id && find(player_id) ? find(player_id).name : ''
   end
 
   def terminated_boards(player_id)
