@@ -27,9 +27,9 @@ RSpec.describe BoardListChannel, type: :channel do
     expect(subscription).to be_confirmed
     expect(subscription).to have_stream_from('board_list_channel')
     expect(transmissions.last).to eq({
-                                       "action" => "board-list:action:subscribed",
-                                       "status" => "board-list:status:success",
-                                       "boards" => []
+                                       'action' => 'board-list:action:subscribed',
+                                       'status' => 'board-list:status:success',
+                                       'boards' => []
                                      })
   end
 
@@ -41,9 +41,9 @@ RSpec.describe BoardListChannel, type: :channel do
     expect(subscription).to be_confirmed
     expect(subscription).to have_stream_from('board_list_channel')
     expect(transmissions.last).to eq({
-                                       "action" => "board-list:action:subscribed",
-                                       "status" => "board-list:status:success",
-                                       "boards" => board_list
+                                       'action' => 'board-list:action:subscribed',
+                                       'status' => 'board-list:status:success',
+                                       'boards' => board_list
                                      })
   end
 
@@ -55,10 +55,10 @@ RSpec.describe BoardListChannel, type: :channel do
     it 'creates a board' do
       perform :create_board, input_data
       expect(transmissions.last).to eq({
-                                         "action" => "board-list:action:create",
-                                         "status" => "board-list:status:success",
-                                         "message" => "#{cm.sanitize(input_data[:board_name])} has been created.",
-                                         "bid" => input_data[:board_id]
+                                         'action' => 'board-list:action:create',
+                                         'status' => 'board-list:status:success',
+                                         'message' => "#{cm.sanitize(input_data[:board_name])} has been created.",
+                                         'bid' => input_data[:board_id]
                                        })
     end
 
@@ -79,10 +79,10 @@ RSpec.describe BoardListChannel, type: :channel do
 
       expect {
         perform :heads_up, {
-          "act": "board-list:action:howdy",
+          "act": 'board-list:action:howdy',
           "message": "#{cm.sanitize(data[-1][:name])} has been created."
         }
-      }.to have_broadcasted_to("board_list_channel").with(
+      }.to have_broadcasted_to('board_list_channel').with(
         action: 'board-list:action:howdy',
         status: 'board-list:status:success',
         boards: board_list,

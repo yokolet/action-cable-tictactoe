@@ -94,6 +94,12 @@ module CacheManager
 
   def delete_instance(id, key)
     instance = Rails.cache.read(id)
+    if instance.respond_to?(:player_of)
+      instance.player_of.each do |bid|
+        board = find(bid)
+        board.terminate if board
+      end
+    end
     if instance
       instances = current_instances(key)
       instances.delete(to_key(sanitize(instance.name)))

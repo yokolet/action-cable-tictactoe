@@ -7,15 +7,14 @@ class BoardChannel < ApplicationCable::Channel
     result = { action: 'board:action:subscribed' }
     if board_id
       board = find(board_id)
-      puts("BoardChannel subscribed, board_id: board  #{board_id}: #{board.inspect}")
       if board
         stream_from "board_channel_#{board_id}"
         board.join(current_player_id)
         board.update_name(player_name(current_player_id), current_player_id)
-        replace_instance(board_id, board)
+        maintenance(current_player_id, board_id, board)
         current_board = board.snapshot
         result[:status] = 'board:status:success'
-        result[:message] = "Successfully subscribed to #{current_board[:name]}"
+        result[:message] = "Successfully subscribed to #{board.name}."
         result[:name] = board.name
         result[:bid] = board_id
         result[:x_name] = board.x_name
@@ -45,17 +44,23 @@ class BoardChannel < ApplicationCable::Channel
   end
 
   def heads_up(data)
+    result = { action: data['act'] || 'board:action:heads_up' }
     board = find(data['bid'])
-    current_board = board.snapshot
-    result = {
-      action: data['act'] || 'board:action:heads_up',
-      status: 'board:status:success',
-      message: data['message'],
-      bid: data['bid'],
-      player_type: board.player_type(current_player_id),
-      player_name: player_name(current_player_id),
-      board_state: current_board[:state]
-    }
+    if board
+      current_board = board.snapshot
+      result[:status] = 'board:status:success'
+      result[:message] = data['message']
+      result[:bid] = data['bid']
+      result[:x_name] = board.x_name
+      result[:o_name] = board.o_name
+      result[:play_result] = current_board[:play_result]
+      result[:board_state] = current_board[:state]
+      result[:board_count] = current_board[:count]
+      result[:board_data] = current_board[:board]
+    else
+      result[:status] = 'board:status:retry'
+      result[:message] = 'The board might be deleted. Choose another or create.'
+    end
     puts("BoardChannel: heads up: input data = #{data.inspect}")
     puts("BoardChannel: heads up: result = #{result.inspect}")
     puts("BoardChannel: heads up: board = #{board.inspect}, player: #{current_player_id}")
@@ -101,8 +106,17 @@ class BoardChannel < ApplicationCable::Channel
 
   private
 
-  def player_name(player_id)
-    player_id && find(player_id) ? find(player_id).name : ''
+  def player_name(pid)
+    pid && find(pid) ? find(pid).name : ''
+  end
+
+  def maintenance(pid, bid, board)
+    replace_instance(bid, board)
+    player = find(pid)
+    if player
+      player.add(bid)
+      replace_instance(pid, player)
+    end
   end
 
   def terminated_boards(player_id)
