@@ -1,22 +1,24 @@
 class BoardChannel < ApplicationCable::Channel
+  include CacheManager
+
   def subscribed
     # stream_from "some_channel"
     board_id = params[:board_id]
     result = { action: 'board:action:subscribed' }
     if board_id
       board = find(board_id)
-      puts("BoardChannel subscribed, board_id: board  #{board_id}: #{board.inspect}")
       if board
         stream_from "board_channel_#{board_id}"
         board.join(current_player_id)
-        replace(board_id, board)
+        board.update_name(player_name(current_player_id), current_player_id)
+        maintenance(current_player_id, board_id, board)
         current_board = board.snapshot
         result[:status] = 'board:status:success'
-        result[:message] = "Successfully subscribed to #{current_board[:name]}"
-        result[:name] = current_board[:name]
+        result[:message] = "Successfully subscribed to #{board.name}."
+        result[:name] = board.name
         result[:bid] = board_id
-        result[:x_name] = player_name(board.player_x)
-        result[:o_name] = player_name(board.player_o)
+        result[:x_name] = board.x_name
+        result[:o_name] = board.o_name
         result[:play_result] = current_board[:play_result]
         result[:board_state] = current_board[:state]
         result[:board_count] = current_board[:count]
@@ -35,27 +37,28 @@ class BoardChannel < ApplicationCable::Channel
 
   def unsubscribed
     # Any cleanup needed when channel is unsubscribed
-    board_id = params[:board_id]
-    if board_id
-      stop_stream_from "board_channel_#{board_id}"
-    end
+    board_ids = find(current_player_id).player_of if find(current_player_id)
+    board_ids.each { |board_id| find(board_id).terminate if find(board_id) }
   end
 
   def heads_up(data)
+    result = { action: data['act'] || 'board:action:heads_up' }
     board = find(data['bid'])
-    current_board = board.snapshot
-    result = {
-      action: 'board:action:heads_up',
-      status: 'board:status:success',
-      message: data['message'],
-      bid: data['bid'],
-      player_type: board.player_type(current_player_id),
-      player_name: player_name(current_player_id),
-      board_state: current_board[:state]
-    }
-    puts("BoardChannel: heads up: input data = #{data.inspect}")
-    puts("BoardChannel: heads up: result = #{result.inspect}")
-    puts("BoardChannel: heads up: board = #{board.inspect}, player: #{current_player_id}")
+    if board
+      current_board = board.snapshot
+      result[:status] = 'board:status:success'
+      result[:message] = data['message']
+      result[:bid] = data['bid']
+      result[:x_name] = board.x_name
+      result[:o_name] = board.o_name
+      result[:play_result] = current_board[:play_result]
+      result[:board_state] = current_board[:state]
+      result[:board_count] = current_board[:count]
+      result[:board_data] = current_board[:board]
+    else
+      result[:status] = 'board:status:retry'
+      result[:message] = 'The board might be deleted. Choose another or create.'
+    end
     ActionCable.server.broadcast("board_channel_#{data["bid"]}", result)
   rescue => error
     result[:status] = 'board:status:error'
@@ -67,7 +70,7 @@ class BoardChannel < ApplicationCable::Channel
     result = { action: 'board:action:play' }
     board = find(data['bid'])
     board_status = board.update(data['x'], data['y'], current_player_id)
-    replace(data['bid'], board)
+    replace_instance(data['bid'], board)
     if [:go_next, :x_wins, :o_wins, :draw].include?(board_status[:play_result])
       result[:status] = 'board:status:success'
       result[:bid] = data['bid']
@@ -83,46 +86,18 @@ class BoardChannel < ApplicationCable::Channel
     transmit(result)
   end
 
-  def leave(_)
-    terminated_boards(current_player_id).each do |bid|
-      result = {
-        action: 'board:action:leave',
-        status: 'board:status:success',
-        bid: bid,
-        board_state: :terminated
-      }
-      ActionCable.server.broadcast("board_channel_#{bid}", result)
-    end
-
-  end
-
   private
 
-  def find(board_id)
-    Rails.cache.read(board_id)
+  def player_name(pid)
+    pid && find(pid) ? find(pid).name : ''
   end
 
-  def replace(board_id, board)
-    Rails.cache.write(board_id, board)
-  end
-
-  def player_name(player_id)
-    player_id && Rails.cache.read(player_id) ? Rails.cache.read(player_id).name : ''
-  end
-
-  def terminated_boards(player_id)
-    board_list = Rails.cache.read(:boards)
-    return [] if !board_list
-    result = []
-    board_list.values.each do |bid|
-      board = Rails.cache.read(bid)
-      next if !board
-      current_board = board.snapshot
-      if current_board[:state] == :ongoing && (board.player_x == player_id || board.player_o == player_id)
-        board.terminate
-        result << bid
-      end
+  def maintenance(pid, bid, board)
+    replace_instance(bid, board)
+    player = find(pid)
+    if player
+      player.add(bid)
+      replace_instance(pid, player)
     end
-    result
   end
 end

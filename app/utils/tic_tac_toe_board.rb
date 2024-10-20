@@ -1,10 +1,12 @@
 # frozen_string_literal: true
 
 class TicTacToeBoard
-  #attr_reader :name, :count, :state, :play_result, :board
+  attr_reader :name, :x_name, :o_name, :last_updated
 
   def initialize(name)
     @name = name
+    @x_name = nil
+    @o_name = nil
     @count = 0
     @state = :waiting  # :waiting, :ongoing, :finished, or :terminated
     @play_result = :go_next  # :go_next, :x_wins, :o_wins, :draw
@@ -14,16 +16,15 @@ class TicTacToeBoard
       ['', '', '']
     ]
     @player_ids = {}
+    @last_updated = Time.now
   end
 
   def snapshot
     return {
-      name: @name,
       count: @count,
       state: @state,
       play_result: @play_result,
-      board: @board,
-      player_ids: @player_ids
+      board: @board
     }
   end
 
@@ -41,9 +42,11 @@ class TicTacToeBoard
     when 0
       @player_ids[player_id] = :playing_x
       @state = :waiting
+      @last_updated = Time.now
     when 1
       @player_ids[player_id] = :playing_o
       @state = :ongoing
+      @last_updated = Time.now
     else
       @player_ids[player_id] = :viewing
     end
@@ -59,6 +62,17 @@ class TicTacToeBoard
 
   def player_o
     @player_ids.filter {|_, v| v == :playing_o}.keys[0]
+  end
+
+  def update_name(name, id)
+    case @player_ids[id]
+    when :playing_x
+      @x_name ||= name
+    when :playing_o
+      @o_name ||= name
+    else
+      # do nothing
+    end
   end
 
   def update(x, y, id)
@@ -85,6 +99,8 @@ class TicTacToeBoard
       @state = :finished
       @play_result = :draw
     end
+
+    @last_updated = Time.now
     return {
       play_result: @play_result,
       state: @state,
@@ -94,7 +110,16 @@ class TicTacToeBoard
   end
 
   def terminate
-    @state = :terminated
+    if @state != :finished
+      @state = :terminated
+      @last_updated = Time.now
+    end
+  end
+
+  def keep?
+    return false if (@state == :terminated || @state == :finished) && (@last_updated + 3.minute) < Time.now
+    return false if (@state == :waiting || @state == :ongoing) && (@last_updated + 5.minute) < Time.now
+    true
   end
 
   private
