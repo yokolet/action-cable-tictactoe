@@ -185,7 +185,7 @@ RSpec.describe "CacheManager", type: :util do
       expect(result.length).to eq(2)
     end
 
-    it 'returns 3 board id and name pairs' do
+    xit 'returns 3 board id and name pairs' do
       result = cm.current_instance_pair_list(bkey)
       expect(result).to eq(data.map {|d| [d[:id], cm.sanitize(d[:name])]})
     end

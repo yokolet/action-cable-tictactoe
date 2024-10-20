@@ -110,7 +110,10 @@ class TicTacToeBoard
   end
 
   def terminate
-    @state = :terminated if @state != :finished
+    if @state != :finished
+      @state = :terminated
+      @last_updated = Time.now
+    end
   end
 
   def keep?

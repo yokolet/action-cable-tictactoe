@@ -9,8 +9,6 @@ RSpec.describe BoardChannel, type: :channel do
   let(:alice) { { name: Faker::Name.name, id: uid } }
   let(:bob) { { name: Faker::Name.name, id: SecureRandom.uuid } }
   let(:bid) { SecureRandom.uuid }
-
-
   let(:data) {
     [
       { name: Faker::Game.title, id: bid },
@@ -118,6 +116,49 @@ RSpec.describe BoardChannel, type: :channel do
           ['', '', ''],
           ['', '', '']
         ],
+      )
+    end
+  end
+
+  context 'with a new board and two players' do
+    let(:board_id) { SecureRandom.uuid }
+
+    before(:each) do
+      cm.clear_boards
+      cm.add_new_board(Faker::Game.title, board_id)
+      board = cm.find(board_id)
+      board.join(uid)
+      board.join(bob[:id])
+      board.update_name(cm.find(uid).name, uid)
+      board.update_name(cm.find(bob[:id]).name, bob[:id])
+      cm.replace_instance(board_id, board)
+
+      subscribe board_id: board_id
+    end
+
+    after(:each) do
+      cm.clear_boards
+    end
+
+    it 'broadcasts the updated state after a play' do
+      expect {
+        perform :play, {
+          'bid': board_id,
+          'x': 2,
+          'y': 2,
+        }
+      }.to have_broadcasted_to("board_channel_#{board_id}").with(
+        action: 'board:action:play',
+        status: 'board:status:success',
+        bid: board_id,
+        play_result: 'go_next',
+        board_state: 'ongoing',
+        board_count: 1,
+        board_data: [
+          ['', '', ''],
+          ['', '', ''],
+          ['', '', 'x']
+        ]
       )
     end
   end

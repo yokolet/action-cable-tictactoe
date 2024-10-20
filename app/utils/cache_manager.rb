@@ -26,8 +26,15 @@ module CacheManager
   end
 
   def current_instances(key)
-    instances = Rails.cache.fetch(key) { {} }.
-      filter { |_, id| Rails.cache.read(id) && Rails.cache.read(id).keep? }
+    # possibly deletes boards who return false from keep? method
+    instances = Rails.cache.fetch(key) { {} }
+    instances.
+      filter { |_, id| Rails.cache.read(id) && !Rails.cache.read(id).keep? }.
+      each_pair { |_, id| delete_instance(id, key) }
+    # possibly deletes players/boards who are expired
+    instances = Rails.cache.fetch(key) { {} }
+    to_be_deleted = instances.filter { |_, id| !Rails.cache.read(id) }.map { |name, _| name }
+    to_be_deleted.each { |name| instances.delete(name) }
     Rails.cache.write(key, instances)
     instances
   end
@@ -77,7 +84,7 @@ module CacheManager
     instances = current_instances(key)
     instances[to_key(name)] = id
     Rails.cache.write(key, instances)
-    Rails.cache.write(id, clazz.new(name))
+    Rails.cache.write(id, clazz.new(name), expires: 15.minutes)
   end
 
   def add_new_player(name, id)
@@ -94,18 +101,17 @@ module CacheManager
 
   def delete_instance(id, key)
     instance = Rails.cache.read(id)
+    return if !instance
     if instance.respond_to?(:player_of)
       instance.player_of.each do |bid|
         board = find(bid)
         board.terminate if board
       end
     end
-    if instance
-      instances = current_instances(key)
-      instances.delete(to_key(sanitize(instance.name)))
-      Rails.cache.write(key, instances)
-      Rails.cache.delete(id)
-    end
+    instances = current_instances(key)
+    instances.delete(to_key(sanitize(instance.name)))
+    Rails.cache.write(key, instances)
+    Rails.cache.delete(id)
   end
 
   def delete_player(pid)

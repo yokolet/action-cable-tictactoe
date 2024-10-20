@@ -37,10 +37,8 @@ class BoardChannel < ApplicationCable::Channel
 
   def unsubscribed
     # Any cleanup needed when channel is unsubscribed
-    board_id = params[:board_id]
-    if board_id
-      stop_stream_from "board_channel_#{board_id}"
-    end
+    board_ids = find(current_player_id).player_of if find(current_player_id)
+    board_ids.each { |board_id| find(board_id).terminate if find(board_id) }
   end
 
   def heads_up(data)
@@ -61,9 +59,6 @@ class BoardChannel < ApplicationCable::Channel
       result[:status] = 'board:status:retry'
       result[:message] = 'The board might be deleted. Choose another or create.'
     end
-    puts("BoardChannel: heads up: input data = #{data.inspect}")
-    puts("BoardChannel: heads up: result = #{result.inspect}")
-    puts("BoardChannel: heads up: board = #{board.inspect}, player: #{current_player_id}")
     ActionCable.server.broadcast("board_channel_#{data["bid"]}", result)
   rescue => error
     result[:status] = 'board:status:error'
@@ -91,19 +86,6 @@ class BoardChannel < ApplicationCable::Channel
     transmit(result)
   end
 
-  def leave(_)
-    terminated_boards(current_player_id).each do |bid|
-      result = {
-        action: 'board:action:leave',
-        status: 'board:status:success',
-        bid: bid,
-        board_state: :terminated
-      }
-      ActionCable.server.broadcast("board_channel_#{bid}", result)
-    end
-
-  end
-
   private
 
   def player_name(pid)
@@ -117,21 +99,5 @@ class BoardChannel < ApplicationCable::Channel
       player.add(bid)
       replace_instance(pid, player)
     end
-  end
-
-  def terminated_boards(player_id)
-    board_list = Rails.cache.read(:boards)
-    return [] if !board_list
-    result = []
-    board_list.values.each do |bid|
-      board = Rails.cache.read(bid)
-      next if !board
-      current_board = board.snapshot
-      if current_board[:state] == :ongoing && (board.player_x == player_id || board.player_o == player_id)
-        board.terminate
-        result << bid
-      end
-    end
-    result
   end
 end
