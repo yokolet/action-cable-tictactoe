@@ -85,12 +85,16 @@ watch(registered, (newValue, oldValue) => {
         :class="registered ? '' : 'opacity-35'"
     >{{ displayName }}</div>
     <div v-show="currentBoardId">
-      <div class="flex items-center justify-center text-xl" v-html="players"></div>
+      <div
+          class="flex items-center justify-center text-xl text-lightBlue"
+          :class="registered ? '' : 'opacity-35'"
+          v-html="players"></div>
       <div
           v-if="boardState === 'ongoing'"
           class="mb-2 text-spline text-[18px] text-gray-50 pt-4 px-4 rounded-md"
+          :class="registered ? '' : 'opacity-35'"
       >
-        <div>
+        <div class="bg-gray-900 rounded-md py-1 border border-gray-600">
           <div v-if="boardCount % 2 === 0">
             <font-awesome-icon :icon="['fas', 'xmark']" />'s turn
           </div>
@@ -99,12 +103,16 @@ watch(registered, (newValue, oldValue) => {
           </div>
         </div>
       </div>
-      <div
-          v-else-if="boardState === 'finished'"
-      >
-        <h3 class="mt-4 text-2xl lg:text-4xl font-bold text-gray-50">
+      <div v-else-if="boardState === 'finished'">
+        <h3
+            class="mt-4 text-2xl lg:text-4xl font-bold text-gray-50"
+            :class="registered ? '' : 'opacity-35'"
+        >
           {{ winner }}
         </h3>
+      </div>
+      <div v-else-if="boardState === 'terminated'">
+        Terminated.
       </div>
       <div v-else>Waiting...</div>
     </div>

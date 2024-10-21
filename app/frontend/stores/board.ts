@@ -47,9 +47,9 @@ export const useBoardStore = defineStore('board', () => {
           if (data['action'] === 'board:action:subscribed') {
             afterSubscribed(bid, data);
           } else if (data['action'] === 'board:action:play') {
-            afterPlay(bid, data);
-          } else if (data['action'] === 'board:action:heads_up') {
-            afterHowdy(bid, data);
+            afterPlay(data);
+          } else if (data['action'] === 'board:action:howdy') {
+            afterHowdy(data);
           }
         }
       });
@@ -80,9 +80,9 @@ export const useBoardStore = defineStore('board', () => {
     }
   }
 
-  const afterPlay = (boardId: string, data: IData) => {
+  const afterPlay = (data: IData) => {
     console.log('afterPlay, data', data);
-    if (data['status'] === 'board:status:success' && boardId === data['bid']) {
+    if (data['status'] === 'board:status:success' && currentBoardId.value === data['bid']) {
       message.value = '';
       playResult.value = data['play_result'];
       boardState.value = data['board_state'];
@@ -93,20 +93,16 @@ export const useBoardStore = defineStore('board', () => {
     }
   }
 
-  const afterHowdy = (boardId: string, data: IData) => {
+  const afterHowdy = (data: IData) => {
     console.log('afterHowdy ', data);
-    if (data['status'] === 'board:status:success' && boardId === data['bid']) {
+    if (data['status'] === 'board:status:success' && currentBoardId.value === data['bid']) {
+      message.value = data['message'] || '';
+      xName.value = data['x_name'];
+      oName.value = data['o_name'];
+      playResult.value = data['play_result'];
       boardState.value = data['board_state'];
-      switch(data['player_type']) {
-        case 'playing_x':
-          xName.value = data['player_name'];
-          break;
-        case 'playing_o':
-          oName.value = data['player_name']
-          break;
-        default:
-          viewers.value.push(data['player_name'])
-      }
+      boardCount.value = data['board_count'];
+      boardData.value = data['board_data'];
     } else {
       message.value = data['message'] || 'Something went wrong';
     }
