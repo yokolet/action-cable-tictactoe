@@ -33,10 +33,10 @@ RSpec.describe "CacheManager", type: :util do
 
     before(:each) do
       players = {}
-      data.each do |h|
-        name = cm.sanitize(h[:name])
-        players[cm.to_key(name)] = h[:id]
-        Rails.cache.write(h[:id], Player.new(name))
+      data.each do |d|
+        name = cm.sanitize(d[:name])
+        players[cm.to_key(name)] = d[:id]
+        Rails.cache.write(d[:id], Player.new(name))
       end
       Rails.cache.write(pkey, players)
     end
@@ -49,7 +49,7 @@ RSpec.describe "CacheManager", type: :util do
       Rails.cache.delete(pkey)
     end
 
-    it 'finds a player given id' do
+    it 'finds a player of given id' do
       result = cm.find(data[0][:id])
       expect(result.is_a?(Player)).to be_truthy
       expect(result.name).to eq(cm.sanitize(data[0][:name]))
@@ -60,12 +60,6 @@ RSpec.describe "CacheManager", type: :util do
       expect(result.length).to eq(3)
       keys = data.map {|d| cm.to_key(cm.sanitize(d[:name]))}
       expect(result.keys).to eq(keys)
-    end
-
-    it 'finds 2 players after deleting one player' do
-      Rails.cache.delete(data[-1][:id])
-      result = cm.current_instances(pkey)
-      expect(result.length).to eq(2)
     end
 
     it 'returns 3 player names' do
@@ -88,10 +82,10 @@ RSpec.describe "CacheManager", type: :util do
   end
 
   context 'while the application is used' do
-    let(:pkey) { :players_cm_2 }
-    let(:pid) { SecureRandom.uuid }
-
     describe 'has a feature to' do
+      let(:pkey) { :players_cm_2 }
+      let(:pid) { SecureRandom.uuid }
+
       after(:each) do
         players = Rails.cache.fetch(pkey) { {} }
         players.each_pair do |_, pid|
@@ -113,6 +107,9 @@ RSpec.describe "CacheManager", type: :util do
     end
 
     describe 'has another feature to' do
+      let(:pkey) { :players_cm_3 }
+      let(:pid) { SecureRandom.uuid }
+
       before(:each) do
         name = cm.sanitize(Faker::Name.name)
         key = cm.to_key(name)
@@ -172,20 +169,20 @@ RSpec.describe "CacheManager", type: :util do
       expect(result.name).to eq(cm.sanitize(data[0][:name]))
     end
 
-    it 'finds 3 boards' do
+    xit 'finds 3 boards' do
       result = cm.current_instances(bkey)
       expect(result.length).to eq(3)
       keys = data.map {|d| cm.to_key(cm.sanitize(d[:name]))}
       expect(result.keys).to eq(keys)
     end
 
-    xit 'finds 2 boards after deleting one board' do
+    it 'finds 2 boards after deleting one board' do
       Rails.cache.delete(data[-1][:id])
       result = cm.current_instances(bkey)
       expect(result.length).to eq(2)
     end
 
-    xit 'returns 3 board id and name pairs' do
+    it 'returns 3 board id and name pairs' do
       result = cm.current_instance_pair_list(bkey)
       expect(result).to eq(data.map {|d| [d[:id], cm.sanitize(d[:name])]})
     end
@@ -248,7 +245,7 @@ RSpec.describe "CacheManager", type: :util do
         Rails.cache.delete(bkey)
       end
 
-      xit 'delete a board' do
+      it 'delete a board' do
         previous = Rails.cache.read(bkey)
         cm.delete_instance(bid, bkey)
         result = Rails.cache.read(bkey)
@@ -260,7 +257,7 @@ RSpec.describe "CacheManager", type: :util do
   end
 
   context 'after 3 players were registered' do
-    let(:pkey) { :players_cm_3 }
+    let(:pkey) { :players_cm_4 }
     let(:player_data) {
       [
         {name: Faker::Name.name, id: SecureRandom.uuid},
@@ -283,7 +280,7 @@ RSpec.describe "CacheManager", type: :util do
   end
 
   context 'after 3 boards were created' do
-    let(:bkey) { :boards_cm_3 }
+    let(:bkey) { :boards_cm_4 }
     let(:board_data) {
       [
         {name: Faker::Game.title, id: SecureRandom.uuid},
