@@ -1,0 +1,63 @@
+# You can copy and paste this template into a new `.gitlab-ci.yml` file.
+# You should not add this template to an existing `.gitlab-ci.yml` file by using the `include:` keyword.
+#
+# To contribute improvements to CI/CD templates, please follow the Development guide at:
+# https://docs.gitlab.com/ee/development/cicd/templates.html
+# This specific template is located at:
+# https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Ruby.gitlab-ci.yml
+
+# Official language image. Look for the different tagged releases at:
+# https://hub.docker.com/r/library/ruby/tags/
+image: ruby:3.3.5
+
+# Pick zero or more services to be used on all builds.
+# Only needed when using a docker container to run your tests in.
+# Check out: https://docs.gitlab.com/ee/ci/services/index.html
+#services:
+#  - redis:latest
+#  - postgres:latest
+
+# Cache gems in between builds
+cache:
+  paths:
+    - vendor/
+    - node_modules/
+    - bun.lockb
+
+stages:
+  - test
+
+.base_setup:
+  variables:
+    RAILS_ENV: test
+
+  before_script:
+    - ruby -v  # Print out ruby version for debugging
+    - apt-get update -qq && apt-get install -y -qq nodejs cmake
+    - apt-get update -qq && apt-get install -y -qq unzip
+    - curl -o- -fsSL https://bun.sh/install | bash
+    - export PATH="$HOME/.bun/bin:$PATH"
+    - bun -v
+    - bun install
+    - bundle config set --local path 'vendor'
+    - bundle install -j $(nproc)
+
+# Optional - Delete if not using `rubocop`
+#rubocop:
+#  script:
+#    - rubocop
+
+rspec:
+  extends: .base_db
+  stage: test
+  script:
+    - bundle exec rspec
+
+# This deploy job uses a simple deploy flow to Heroku, other providers, e.g. AWS Elastic Beanstalk
+# are supported too: https://github.com/travis-ci/dpl
+#deploy:
+#  stage: deploy
+#  environment: production
+#  script:
+#    - gem install dpl
+#    - dpl --provider=heroku --app=$HEROKU_APP_NAME --api-key=$HEROKU_PRODUCTION_KEY
