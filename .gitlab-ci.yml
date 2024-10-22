@@ -48,7 +48,7 @@ stages:
 #    - rubocop
 
 rspec:
-  extends: .base_db
+  extends: .base_setup
   stage: test
   script:
     - bundle exec rspec
