@@ -74,10 +74,10 @@ RSpec.describe "CacheManager", type: :util do
     end
 
     it 'checks if the given player name is already registered' do
-      result = cm.existing_instance?("Hello World", pkey)
-      expect(result).to be_falsey
-      result = cm.existing_instance?(data[1][:name], pkey)
-      expect(result).to be_truthy
+      result = cm.available_instance?("Hello World", pkey)
+      expect(result[:status]).to be_truthy
+      result = cm.available_instance?(data[1][:name], pkey)
+      expect(result[:status]).to be_falsey
     end
   end
 
@@ -132,7 +132,6 @@ RSpec.describe "CacheManager", type: :util do
         expect(player).to be_nil
       end
     end
-
   end
 
   context 'when 3 boards have been created' do
@@ -169,17 +168,11 @@ RSpec.describe "CacheManager", type: :util do
       expect(result.name).to eq(cm.sanitize(data[0][:name]))
     end
 
-    xit 'finds 3 boards' do
+    it 'finds 3 boards' do
       result = cm.current_instances(bkey)
       expect(result.length).to eq(3)
       keys = data.map {|d| cm.to_key(cm.sanitize(d[:name]))}
       expect(result.keys).to eq(keys)
-    end
-
-    it 'finds 2 boards after deleting one board' do
-      Rails.cache.delete(data[-1][:id])
-      result = cm.current_instances(bkey)
-      expect(result.length).to eq(2)
     end
 
     it 'returns 3 board id and name pairs' do
@@ -187,23 +180,54 @@ RSpec.describe "CacheManager", type: :util do
       expect(result).to eq(data.map {|d| [d[:id], cm.sanitize(d[:name])]})
     end
 
-    it 'returns 2 board id and name pairs after deleting one board' do
-      Rails.cache.delete(data[0][:id])
-      result = cm.current_instance_pair_list(bkey)
-      expect(result).to eq(data[1..-1].map {|d| [d[:id], cm.sanitize(d[:name])]})
+    it 'checks if the given board name is already used' do
+      result = cm.available_instance?("Hello World", bkey)
+      expect(result[:status]).to be_truthy
+      result = cm.available_instance?(data[1][:name], bkey)
+      expect(result[:status]).to be_falsey
+    end
+  end
+
+  context 'when 3 boards have been created for another occasion' do
+    let(:bkey) { :boards_cm_2 }
+    let(:data) {
+      [
+        {name: Faker::Game.title, id: SecureRandom.uuid},
+        {name: Faker::Game.title, id: SecureRandom.uuid},
+        {name: Faker::Game.title, id: SecureRandom.uuid}
+      ]
+    }
+
+    before(:each) do
+      boards = {}
+      data.each do |d|
+        name = cm.sanitize(d[:name])
+        boards[cm.to_key(name)] = d[:id]
+        Rails.cache.write(d[:id], TicTacToeBoard.new(name))
+      end
+      Rails.cache.write(bkey, boards)
     end
 
-    it 'checks if the given board name is already used' do
-      result = cm.existing_instance?("Hello World", bkey)
-      expect(result).to be_falsey
-      result = cm.existing_instance?(data[1][:name], bkey)
-      expect(result).to be_truthy
+    after(:each) do
+      boards = Rails.cache.fetch(bkey) { {} }
+      boards.each_pair do |_, bid|
+        Rails.cache.delete(bid)
+      end
+      Rails.cache.delete(bkey)
+    end
+
+    it 'finds 2 boards after deleting one board' do
+      Rails.cache.delete(data[-1][:id])
+      result = cm.current_instances(bkey)
+      expect(result.length).to eq(2)
+      result = cm.current_instance_pair_list(bkey)
+      expect(result).to eq(data[0...-1].map {|d| [d[:id], cm.sanitize(d[:name])]})
     end
   end
 
   context 'while the application is used' do
     describe 'has a feature to' do
-      let(:bkey) { :boards_cm_2 }
+      let(:bkey) { :boards_cm_3 }
       let(:bid) { SecureRandom.uuid }
 
       after(:each) do
@@ -227,7 +251,7 @@ RSpec.describe "CacheManager", type: :util do
     end
 
     describe 'has another feature to' do
-      let(:bkey) { :boards_cm_3 }
+      let(:bkey) { :boards_cm_4 }
       let(:bid) { SecureRandom.uuid }
 
       before(:each) do
@@ -279,8 +303,32 @@ RSpec.describe "CacheManager", type: :util do
     end
   end
 
+  context 'after 20 players were registered' do
+    let(:pkey) { :players_cm_5 }
+
+    before(:each) do
+      20.times {
+        cm.add_new(Faker::Name.name, SecureRandom.uuid, pkey, Player)
+      }
+    end
+
+    after(:each) do
+      players = Rails.cache.fetch(pkey) { {} }
+      players.values.each { |id| Rails.cache.delete(id) }
+      Rails.cache.delete(pkey)
+    end
+
+    it 'does not allow 21th player to register' do
+      players = cm.current_instances(pkey)
+      expect(players.length).to eq(20)
+      availability = cm.available_instance?(Faker::Name.name, pkey)
+      expect(availability[:status]).to be_falsey
+      expect(availability[:reason]).to eq(:max_number)
+    end
+  end
+
   context 'after 3 boards were created' do
-    let(:bkey) { :boards_cm_4 }
+    let(:bkey) { :boards_cm_5 }
     let(:board_data) {
       [
         {name: Faker::Game.title, id: SecureRandom.uuid},
@@ -299,6 +347,30 @@ RSpec.describe "CacheManager", type: :util do
       cm.clear_instances(bkey)
       boards = cm.current_instances(bkey)
       expect(boards.length).to eq(0)
+    end
+  end
+
+  context 'after 20 boards were created' do
+    let(:bkey) { :boards_cm_6 }
+
+    before(:each) do
+      20.times {
+        cm.add_new(Faker::Game.title, SecureRandom.uuid, bkey, TicTacToeBoard)
+      }
+    end
+
+    after(:each) do
+      boards = Rails.cache.fetch(bkey) { {} }
+      boards.values.each { |id| Rails.cache.delete(id) }
+      Rails.cache.delete(bkey)
+    end
+
+    it 'does not allow 21th player to register' do
+      boards = cm.current_instances(bkey)
+      expect(boards.length).to eq(20)
+      availability = cm.available_instance?(Faker::Game.title, bkey)
+      expect(availability[:status]).to be_falsey
+      expect(availability[:reason]).to eq(:max_number)
     end
   end
 end

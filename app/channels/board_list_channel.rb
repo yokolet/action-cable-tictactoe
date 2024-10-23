@@ -21,14 +21,20 @@ class BoardListChannel < ApplicationCable::Channel
   end
 
   def create_board(data)
+    messages = {
+      max_number: "A number of boards reached to maximum. Try later",
+      duplicate: "The board name #{sanitize(data["board_name"])} exists. Choose another.",
+      ok: "#{sanitize(data["board_name"])} has been created."
+    }
     result = { action: 'board-list:action:create' }
-    if (existing_board?(data["board_name"]))
+    availability= available_board?(data["board_name"])
+    if (!availability[:status])
       result[:status] = 'board-list:status:retry'
-      result[:message] = "The board name #{sanitize(data["board_name"])} exists. Choose another."
+      result[:message] = messages[availability[:reason]]
     else
       add_new_board(data["board_name"], data["board_id"])
       result[:status] = 'board-list:status:success'
-      result[:message] = "#{sanitize(data["board_name"])} has been created."
+      result[:message] = messages[availability[:reason]]
       result[:bid] = data["board_id"]
     end
   rescue => error

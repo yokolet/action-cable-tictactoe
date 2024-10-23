@@ -49,6 +49,7 @@ export const usePlayerStore = defineStore('player', () => {
       message.value = 'Player name is required';
       return;
     }
+    playerName.value = playerName.value.replace(/[^A-Za-z0-9'\-_\s]/g, '').replace(/\s+/g, ' ').trim();
     channel.perform("register", {"player": playerName.value });
   }
 
