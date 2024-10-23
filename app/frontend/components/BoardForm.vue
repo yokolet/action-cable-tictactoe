@@ -6,7 +6,6 @@ const boardListStore = useBoardListStore();
 const { message, boardName, openBoardForm } = storeToRefs(boardListStore);
 
 const create = () => {
-  console.log('boardName', boardName.value);
   boardListStore.createBoard();
 }
 </script>

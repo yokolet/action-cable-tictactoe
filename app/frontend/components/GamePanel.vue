@@ -47,12 +47,8 @@ const winner = computed(() => {
 
 watch(
     currentBoardId,
-    (newValue, oldValue) => {
-      console.log('GamePanel, newValue', newValue);
-      console.log('GamePanel, oldValue', oldValue);
+    (newValue, _) => {
       if (newValue) {
-        console.log('GamePanel currentBoardId', currentBoardId.value);
-        console.log('GamePanel, boardChannel', boardChannel.value);
         if (currentBoardId.value && boardChannel.value) {
           displayName.value = `${boardName.value} Battle!`;
         } else {
@@ -63,19 +59,6 @@ watch(
       }
     }
 )
-
-watch(boardCount, (newValue, oldValue) => {
-  console.log('GamePanel, boardCount, newValue', newValue);
-  console.log('GamePanel, boardCount, oldValue', oldValue);
-});
-
-watch(registered, (newValue, oldValue) => {
-  console.log('GamePanel, registered, newValue', newValue);
-  console.log('GamePanel, registered, oldValue', oldValue);
-  // if (!newValue && oldValue) {
-  //   boardStore.leave();
-  // }
-})
 </script>
 
 <template>

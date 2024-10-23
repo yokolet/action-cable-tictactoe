@@ -21,7 +21,6 @@ export const usePlayerStore = defineStore('player', () => {
     .subscriptions
     .create({ channel: 'PlayerChannel', player: playerName.value }, {
     received(data: IData) {
-      console.log('Received data', data);
       if (data['action'] === 'player:action:subscribed') {
         afterSubscribed(data);
       } else if (data['action'] === 'player:action:register') {

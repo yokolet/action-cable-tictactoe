@@ -11,7 +11,6 @@ const emit = defineEmits(['closeRegistration']);
 const playerStore = usePlayerStore();
 const { message, playerName } = storeToRefs(playerStore);
 const register = () => {
-  console.log('playerName', playerName.value);
   playerStore.addPlayer();
 }
 </script>

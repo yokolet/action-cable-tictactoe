@@ -43,7 +43,6 @@ export const useBoardStore = defineStore('board', () => {
       .subscriptions
       .create({ channel: 'BoardChannel', board_id: bid }, {
         received(data: IData) {
-          console.log('BoardStore received data', data);
           if (data['action'] === 'board:action:subscribed') {
             afterSubscribed(bid, data);
           } else if (data['action'] === 'board:action:play') {
@@ -67,7 +66,6 @@ export const useBoardStore = defineStore('board', () => {
       boardData.value = data['board_data']; // a game might be ongoing already
       currentBoardId.value = data['bid'];
 
-      console.log('afterSubscribed', boardChannel.value, boardName.value);
       boardChannel.value.perform(
         'heads_up',
         {
@@ -81,7 +79,6 @@ export const useBoardStore = defineStore('board', () => {
   }
 
   const afterPlay = (data: IData) => {
-    console.log('afterPlay, data', data);
     if (data['status'] === 'board:status:success' && currentBoardId.value === data['bid']) {
       message.value = '';
       playResult.value = data['play_result'];
@@ -94,7 +91,6 @@ export const useBoardStore = defineStore('board', () => {
   }
 
   const afterHowdy = (data: IData) => {
-    console.log('afterHowdy ', data);
     if (data['status'] === 'board:status:success' && currentBoardId.value === data['bid']) {
       message.value = data['message'] || '';
       xName.value = data['x_name'];
