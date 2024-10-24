@@ -36,7 +36,7 @@ group :development, :test do
   gem "webmock", "~> 3.24"
   gem "pry", "~> 0.14.2"
   gem "rspec-rails", "~> 7.0"
-  gem "faker", "~> 3.4"
+  gem "faker", "~> 3.5"
 end
 
 group :development do

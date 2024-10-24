@@ -97,7 +97,7 @@ GEM
     drb (2.2.1)
     dry-cli (1.1.0)
     erubi (1.13.0)
-    faker (3.4.2)
+    faker (3.5.1)
       i18n (>= 1.8.11, < 2)
     foreman (0.88.1)
     globalid (1.2.1)
@@ -298,7 +298,7 @@ DEPENDENCIES
   bootsnap
   brakeman
   debug
-  faker (~> 3.4)
+  faker (~> 3.5)
   foreman (~> 0.88.1)
   jbuilder
   pry (~> 0.14.2)
