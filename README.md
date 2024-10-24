@@ -126,3 +126,5 @@ Check the player names, A vs B, to see who are playing on that board.
 
 Players will be deleted when "Unregister" button is clicked or close a tab or window.
 On the other hand, boards expire after certain length of inactivity.
+Both players and boards expire 10 minutes after the creation.
+Expired states are not reflected on the screen in time.
