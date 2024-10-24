@@ -14,7 +14,6 @@ const boardStore = useBoardStore();
 
 const joinBoard = (item: string | string[]) => {
   if (typeof item === 'object') {
-    console.log(`joined to board: ${item[1]}, id: ${item[0]}`);
     boardStore.joinBoard(item[0]);
   }
 }

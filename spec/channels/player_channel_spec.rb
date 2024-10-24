@@ -124,7 +124,7 @@ RSpec.describe PlayerChannel, type: :channel do
       expect(transmissions.last).to eq({
                                          "action" => "player:action:register",
                                          "status" => "player:status:retry",
-                                         "message" => "Player name #{cm.sanitize(data[0][:name])} exists. Choose another."
+                                         "message" => "The player name #{cm.sanitize(data[0][:name])} exists. Choose another."
                                        })
     end
 

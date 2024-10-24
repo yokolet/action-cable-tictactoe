@@ -6,7 +6,7 @@ class PlayerChannel < ApplicationCable::Channel
     stream_from "player_channel"
     result = {
       action: 'player:action:subscribed',
-      status: existing_player?(player_name) ? 'player:status:existing' : 'player:status:non-existing',
+      status: available_player?(player_name)[:status] ? 'player:status:non-existing' : 'player:status:existing',
       players: current_player_list,
       #players: static_player_names, # for ui testing purpose
     }
@@ -29,11 +29,17 @@ class PlayerChannel < ApplicationCable::Channel
   end
 
   def register(data)
+    messages = {
+      max_number: "A number of players reached to maximum. Try later",
+      duplicate: "The player name #{sanitize(data["player"])} exists. Choose another.",
+      ok: "#{sanitize(data["player"])} has been registered."
+    }
     result = { action: 'player:action:register' }
     player_name = sanitize(data["player"])
-    if (existing_player?(player_name))
+    availability = available_player?(player_name)
+    if (!availability[:status])
       result[:status] = 'player:status:retry'
-      result[:message] = "Player name #{player_name} exists. Choose another."
+      result[:message] = messages[availability[:reason]]
     else
       add_new_player(player_name, current_player_id)
       result[:status] = 'player:status:success'

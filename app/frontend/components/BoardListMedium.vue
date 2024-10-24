@@ -17,7 +17,6 @@ const { boards, openBoardForm } = storeToRefs(boardListStore);
 const boardStore = useBoardStore();
 
 const joinBoard = (boardId: string) => {
-  console.log(`joined to board: ${boardId}`);
   boardStore.joinBoard(boardId);
 }
 </script>

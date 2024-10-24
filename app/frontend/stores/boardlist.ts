@@ -24,7 +24,6 @@ export const useBoardListStore = defineStore('board-list', () => {
     .subscriptions
     .create({ channel: 'BoardListChannel' }, {
       received(data: IData) {
-        console.log('BoardListStore received data', data);
         if (data['action'] === 'board-list:action:subscribed') {
           afterSubscribed(data);
         } else if (data['action'] === 'board-list:action:create') {

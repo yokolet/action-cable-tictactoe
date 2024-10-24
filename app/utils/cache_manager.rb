@@ -11,6 +11,8 @@ module CacheManager
   # Each board
   # key: board_id, value: TicTacToeBoard instance
 
+  MAX_NUMBER_OF_INSTANCES = 20
+
   def sanitize(name)
     # allows alphanumeric, single quote, underscore, hyphen, and only one space in between
     # limits length to 30
@@ -81,16 +83,25 @@ module CacheManager
     current_instance_pair_list(:boards)
   end
 
-  def existing_instance?(name, key)
-    current_instances(key).include?(to_key(sanitize(name)))
+  def available_instance?(name, key)
+    result = { status: true, reason: :ok }
+    instances = current_instances(key)
+    if instances.length == MAX_NUMBER_OF_INSTANCES
+      result[:status] = false
+      result[:reason] = :max_number
+    elsif instances.include?(to_key(sanitize(name)))
+      result[:status] = false
+      result[:reason] = :duplicate
+    end
+    result
   end
 
-  def existing_player?(name)
-    existing_instance?(name,:players)
+  def available_player?(name)
+    available_instance?(name,:players)
   end
 
-  def existing_board?(name)
-    existing_instance?(name, :boards)
+  def available_board?(name)
+    available_instance?(name, :boards)
   end
 
   def add_new(name, id, key, clazz)
@@ -128,7 +139,10 @@ module CacheManager
     if instance.respond_to?(:player_of)
       instance.player_of.each do |bid|
         board = find(bid)
-        board.terminate if board && (board.player_x == id || board.player_o == id)
+        if board && (board.player_x == id || board.player_o == id)
+          board.terminate
+          Rails.cache.write(bid, board)
+        end
       end
     end
     Rails.cache.delete(id)

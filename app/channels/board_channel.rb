@@ -38,6 +38,7 @@ class BoardChannel < ApplicationCable::Channel
   def unsubscribed
     # Any cleanup needed when channel is unsubscribed
     board_ids = find(current_player_id).player_of if find(current_player_id)
+    return if !board_ids
     board_ids.each { |board_id| find(board_id).terminate if find(board_id) }
   end
 

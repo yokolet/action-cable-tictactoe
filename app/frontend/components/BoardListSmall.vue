@@ -22,7 +22,6 @@ const boardStore = useBoardStore();
 const openFullList = ref<boolean>(false);
 
 const joinBoard = (boardId: string) => {
-  console.log(`joined to board: ${boardId}`);
   boardStore.joinBoard(boardId);
 }
 </script>

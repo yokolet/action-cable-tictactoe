@@ -163,39 +163,3 @@ RSpec.describe BoardChannel, type: :channel do
     end
   end
 end
-
-
-=begin
-expected to broadcast exactly 1 messages to
-board_channel_ab29ce41-c90d-415f-a6e8-78d152e72f00 with
-{
-"action"=>"board:action:howdy",
-"status"=>"board:status:success",
-"message"=>"A new player joined to Sleeping Dogs.",
-"bid"=>"ab29ce41-c90d-415f-a6e8-78d152e72f00",
-"x_name"=>"Pauletta Considine",
-"o_name"=>"Nathan Becker",
-"play_result"=>:go_next,
-"board_state"=>:ongoing,
-"board_count"=>0,
-"board_data"=>[["", "", ""], ["", "", ""], ["", "", ""]]
-},
-
-but broadcast 0
-Broadcasted messages to
-board_channel_ab29ce41-c90d-415f-a6e8-78d152e72f00:
-{
-"action":"board:action:howdy",
-"status":"board:status:success",
-"message":"A new player joined to Sleeping Dogs.",
-"bid":"ab29ce41-c90d-415f-a6e8-78d152e72f00",
-"x_name":"Pauletta Considine",
-"o_name":"Nathan Becker",
-"play_result":"go_next",
-"board_state":"ongoing",
-"board_count":0,
-"board_data":[["","",""],["","",""],["","",""]]
-}
-
-
-=end

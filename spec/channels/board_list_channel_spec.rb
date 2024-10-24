@@ -4,7 +4,6 @@ RSpec.describe BoardListChannel, type: :channel do
   let!(:cm) {
     Class.new { extend CacheManager }
   }
-
   let(:uid) { SecureRandom.uuid }
   let(:data) {
     [
@@ -90,6 +89,4 @@ RSpec.describe BoardListChannel, type: :channel do
       )
     end
   end
-
-
 end

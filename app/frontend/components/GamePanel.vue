@@ -47,12 +47,8 @@ const winner = computed(() => {
 
 watch(
     currentBoardId,
-    (newValue, oldValue) => {
-      console.log('GamePanel, newValue', newValue);
-      console.log('GamePanel, oldValue', oldValue);
+    (newValue, _) => {
       if (newValue) {
-        console.log('GamePanel currentBoardId', currentBoardId.value);
-        console.log('GamePanel, boardChannel', boardChannel.value);
         if (currentBoardId.value && boardChannel.value) {
           displayName.value = `${boardName.value} Battle!`;
         } else {
@@ -63,19 +59,6 @@ watch(
       }
     }
 )
-
-watch(boardCount, (newValue, oldValue) => {
-  console.log('GamePanel, boardCount, newValue', newValue);
-  console.log('GamePanel, boardCount, oldValue', oldValue);
-});
-
-watch(registered, (newValue, oldValue) => {
-  console.log('GamePanel, registered, newValue', newValue);
-  console.log('GamePanel, registered, oldValue', oldValue);
-  // if (!newValue && oldValue) {
-  //   boardStore.leave();
-  // }
-})
 </script>
 
 <template>
@@ -84,15 +67,13 @@ watch(registered, (newValue, oldValue) => {
         class="mt-4 text-2xl"
         :class="registered ? '' : 'opacity-35'"
     >{{ displayName }}</div>
-    <div v-show="currentBoardId">
+    <div v-show="currentBoardId" :class="registered ? '' : 'opacity-35'">
       <div
           class="flex items-center justify-center text-xl text-lightBlue"
-          :class="registered ? '' : 'opacity-35'"
           v-html="players"></div>
       <div
           v-if="boardState === 'ongoing'"
           class="mb-2 text-spline text-[18px] text-gray-50 pt-4 px-4 rounded-md"
-          :class="registered ? '' : 'opacity-35'"
       >
         <div class="bg-gray-900 rounded-md py-1 border border-gray-600">
           <div v-if="boardCount % 2 === 0">
@@ -106,7 +87,6 @@ watch(registered, (newValue, oldValue) => {
       <div v-else-if="boardState === 'finished'">
         <h3
             class="mt-4 text-2xl lg:text-4xl font-bold text-gray-50"
-            :class="registered ? '' : 'opacity-35'"
         >
           {{ winner }}
         </h3>
