@@ -128,3 +128,10 @@ Players will be deleted when "Unregister" button is clicked or close a tab or wi
 On the other hand, boards expire after certain length of inactivity.
 Both players and boards expire 10 minutes after the creation.
 Expired states are not reflected on the screen in time.
+
+
+## Live Site
+
+The application is live at Heroku.
+
+[https://action-cable-tictactoe-2fbbd874419e.herokuapp.com/](https://action-cable-tictactoe-2fbbd874419e.herokuapp.com/)
