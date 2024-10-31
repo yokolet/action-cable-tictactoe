@@ -55,6 +55,44 @@ Chrome, Firefox, and Safari don't have a problem to request non-SSL URL.
 $ bundle exec rspec
 ```
 
+### Deploy to Heroku
+
+#### Set up buildpacks
+
+Go to the application settings page on Heroku website and add two buildpacks.
+The two buildpacks should have the order below:
+1. https://github.com/jakeg/heroku-buildpack-bun
+2. heroku/ruby
+
+Verify the added buildpacks using Heroku CLI
+```bash
+$ heroku buildpacks
+=== action-cable-tictactoe Buildpack URLs
+
+1. https://github.com/jakeg/heroku-buildpack-bun
+2. heroku/ruby
+```
+
+#### Create Procfile
+
+Create a Procfile in the top directory with the content below:
+
+```bash
+web: bin/rails server
+```
+
+#### Manual deployment
+
+Run the Heroku CLI command below to deploy manually.
+
+```bash
+$ git push heroku main
+
+# or below to deploy a branch
+
+$ git push heroku branch-name:main
+```
+
 ## How to Use
 
 #### 1. Initial screen
