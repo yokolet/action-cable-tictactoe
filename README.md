@@ -57,6 +57,10 @@ $ bundle exec rspec
 
 ### Deploy to Heroku
 
+#### Prerequisite
+- Create your account on Heroku
+- Create an application
+
 #### Set up buildpacks
 
 Go to the application settings page on Heroku website and add two buildpacks.
@@ -92,6 +96,17 @@ $ git push heroku main
 
 $ git push heroku branch-name:main
 ```
+
+#### GitLab CI/CD deployment
+
+Create two variables on GitLab's repository.
+- Go to your application repository on GitLab
+- From the left side menu, Settings -> CI/CD -> Variables (expand the section)
+- Add HEROKU_APP_NAME and HEROKU_PRODUCTION_KEY with appropriate option choices and values.\
+  HEROKU_PRODUCTION_KEY is in your Account Settings page (not application's settings) on Heroku.
+
+When the main branch is updated, the application is deployed to Heroku automatically.
+
 
 ## How to Use
 
