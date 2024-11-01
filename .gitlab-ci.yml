@@ -26,6 +26,7 @@ cache:
 
 stages:
   - test
+  - deploy
 
 .base_setup:
   variables:
@@ -57,9 +58,11 @@ rspec:
 
 # This deploy job uses a simple deploy flow to Heroku, other providers, e.g. AWS Elastic Beanstalk
 # are supported too: https://github.com/travis-ci/dpl
-#deploy:
-#  stage: deploy
-#  environment: production
-#  script:
-#    - gem install dpl
-#    - dpl --provider=heroku --app=$HEROKU_APP_NAME --api-key=$HEROKU_PRODUCTION_KEY
+heroku_deploy:
+  stage: deploy
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  environment: production
+  script:
+    - gem install dpl
+    - dpl --provider=heroku --app=$HEROKU_APP_NAME --api-key=$HEROKU_PRODUCTION_KEY
