@@ -36,7 +36,7 @@ group :development, :test do
   gem "rubocop-rails-omakase", require: false
 
   gem "webmock", "~> 3.24"
-  gem "pry", "~> 0.14.2"
+  gem "pry", "~> 0.15.0"
   gem "rspec-rails", "~> 7.0"
   gem "faker", "~> 3.4"
 end
